@@ -37,7 +37,14 @@ smooth = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM)
 By running the following script (``EncodingCompas.py``) we the following images are generated. For a more interactive experimentation there is also the jupyter notebook
 
 ![](images/compasLinear.png)
+
+Comparing one-hot encoding and target encoding regularization (Gaussian noise and smoothing) for the Logistic Regression, Decision Tree, and Gradient Boosting classifiers over the test set of the COMPAS dataset. The protected group is \textit{African-American}. Reference group is \textit{Caucasian}. Red dots regard different regularization parameters: the darker the red the higher the regularization. Blue dot regards the one-hot encoding.
+
 ![](images/compassHyperGaussian.png)
+Impact of the Gaussian noise regularization parameter $\lambda$ on performance and fairness metrics over the test set of the COMPAS dataset. In the left image the AUC of the protected group, reference group, and global over the regularization hyperparameter. On the right, the equal opportunity fairness variation throughout the regularization hyperparameter.
+![](images/compassHyperSmoothing.png)
+
+Impact of the smoothing regularization parameter $m$ in $\lambda(n_i) = n_i/(n_i+m)$ on performance and fairness metrics over the test set of the CoOMPAS dataset. In the left image the AUC of the protected group, reference group and global over the regularization hyperparameter. On the right, the equal opportunity fairness variation through out the regularization hyperparameter.
 
 # Acknowledgements
 
