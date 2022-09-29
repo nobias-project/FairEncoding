@@ -531,8 +531,6 @@ axs[1].set_ylabel("Equal opportunity fairness (TPR)")
 axs[1].set_xlabel("Regularization parameter")
 plt.savefig("images/compassHyperGaussian.png")
 plt.show()
-
-
 # In[35]:
 fig, axs = plt.subplots(1, 2, sharex=True)
 
