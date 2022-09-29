@@ -456,7 +456,30 @@ axs[0].scatter(
     label="Average Absolute Odds",
 )
 ### ONE-HOT
-axs[0].scatter(y=one_hot1["eof"], x=one_hot1.auc_tot, s=100, label="One Hot Encoder")
+axs[0].scatter(
+    y=one_hot1["eof"],
+    x=one_hot1.auc_tot,
+    c="r",
+    marker="x",
+    s=100,
+    label="One Hot Encoder EOF",
+)
+axs[0].scatter(
+    y=one_hot1["dp"],
+    x=one_hot1.auc_tot,
+    c="b",
+    marker="x",
+    s=100,
+    label="One Hot Encoder DP",
+)
+axs[0].scatter(
+    y=one_hot1["aao"],
+    x=one_hot1.auc_tot,
+    c="g",
+    marker="x",
+    s=100,
+    label="One Hot Encoder AAO",
+)
 
 ### Figure labels
 axs[0].legend()
@@ -494,7 +517,31 @@ axs[1].scatter(
     label="Average Absolute Odds",
 )
 
-axs[1].scatter(y=one_hot1["eof"], x=one_hot1.auc_tot, s=100, label="One Hot Encoder")
+### ONE-HOT
+axs[1].scatter(
+    y=one_hot1["eof"],
+    x=one_hot1.auc_tot,
+    c="r",
+    marker="x",
+    s=100,
+    label="One Hot Encoder EOF",
+)
+axs[1].scatter(
+    y=one_hot1["dp"],
+    x=one_hot1.auc_tot,
+    c="b",
+    marker="x",
+    s=100,
+    label="One Hot Encoder DP",
+)
+axs[1].scatter(
+    y=one_hot1["aao"],
+    x=one_hot1.auc_tot,
+    c="g",
+    marker="x",
+    s=100,
+    label="One Hot Encoder AAO",
+)
 fig.savefig("images/encTheory.png")
 fig.show()
 # %%
