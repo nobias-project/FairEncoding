@@ -1,19 +1,7 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# #### Libraries
-
-# In[1]:
-
-
-get_ipython().run_cell_magic('javascript', '', 'utils.load_extension("collapsible_headings/main")')
-
-
-# In[2]:
-
-
+# %%
 import pandas as pd
 import random
+
 random.seed(0)
 from collections import defaultdict
 
@@ -21,51 +9,14 @@ pd.set_option("display.max_columns", None)
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-get_ipython().run_line_magic('matplotlib', 'inline')
 from matplotlib import rcParams
 
+plt.rcParams["figure.figsize"] = [10, 5]
 plt.style.use("seaborn-whitegrid")
 rcParams["axes.labelsize"] = 14
 rcParams["xtick.labelsize"] = 12
 rcParams["ytick.labelsize"] = 12
 rcParams["figure.figsize"] = 16, 8
-
-# from pandas_profiling import ProfileReportofileReport
-
-import warnings
-
-warnings.filterwarnings("ignore")
-
-
-# In[3]:
-
-
-import matplotlib.pyplot as plt
-
-plt.rcParams["figure.figsize"] = [10, 5]
-
-
-# In[4]:
-
-
-import pandas as pd
-
-pd.set_option("display.max_columns", None)
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pdb
-
-from matplotlib import rcParams
-
-plt.style.use("seaborn-whitegrid")
-plt.rcParams["figure.figsize"] = [10, 5]
-rcParams["axes.labelsize"] = 14
-rcParams["xtick.labelsize"] = 12
-rcParams["ytick.labelsize"] = 12
-rcParams["figure.figsize"] = 16, 8
-
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -73,7 +24,7 @@ warnings.filterwarnings("ignore")
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 
-from sklearn.metrics import roc_auc_score,confusion_matrix
+from sklearn.metrics import roc_auc_score, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
@@ -96,12 +47,7 @@ from fairtools.utils import (
     scale_output,
 )
 
-
-# ## Data Loading and helper functions
-
-# In[5]:
-
-
+# %%
 df = pd.read_csv("data/compas-scores-raw.csv")
 
 df["Score"] = df["DecileScore"]
@@ -109,7 +55,7 @@ df["Score"] = df["DecileScore"]
 df.loc[df["DecileScore"] > 4, "Score"] = 1
 df.loc[df["DecileScore"] <= 4, "Score"] = 0
 
-df.loc[df['Ethnic_Code_Text'] == 'African-Am', 'Ethnic_Code_Text'] = 'African-American'
+df.loc[df["Ethnic_Code_Text"] == "African-Am", "Ethnic_Code_Text"] = "African-American"
 
 cols = [
     "Person_ID",
@@ -122,20 +68,19 @@ cols = [
     "ScaleSet_ID",
     "Screening_Date",
     "RecSupervisionLevel",
-    #"Agency_Text",
-    #"AssessmentReason",
+    # "Agency_Text",
+    # "AssessmentReason",
     "Language",
     "Scale_ID",
-    #"IsCompleted",
-    #"IsDeleted",
-    #"AssessmentType",
+    # "IsCompleted",
+    # "IsDeleted",
+    # "AssessmentType",
     "DecileScore",
     "RecSupervisionLevelText",
-    #"DisplayText",
-    #"ScaleSet",
-    #"LegalStatus",
-    #"CustodyStatus",
-
+    # "DisplayText",
+    # "ScaleSet",
+    # "LegalStatus",
+    # "CustodyStatus",
 ]
 
 
@@ -150,8 +95,8 @@ y = df[["Score"]]
 # In[6]:
 
 
-X['Sex_Code_Text'] = pd.get_dummies(X['Sex_Code_Text'],prefix='Sex')['Sex_Male']
-X["ScaleSet"] = pd.get_dummies(X['ScaleSet'])['Risk and Prescreen']
+X["Sex_Code_Text"] = pd.get_dummies(X["Sex_Code_Text"], prefix="Sex")["Sex_Male"]
+X["ScaleSet"] = pd.get_dummies(X["ScaleSet"])["Risk and Prescreen"]
 
 
 # In[7]:
@@ -183,8 +128,8 @@ y.value_counts(normalize=True)
 
 
 aux = X.copy()
-aux['score'] = y
-print(aux.groupby('Ethnic').score.mean())
+aux["score"] = y
+print(aux.groupby("Ethnic").score.mean())
 del aux
 
 
@@ -195,9 +140,11 @@ del aux
 filter_value = 323
 
 aux = pd.DataFrame(X["Ethnic"].value_counts())
-aux2 = pd.DataFrame(data = {'Ethnic': aux[aux.Ethnic<filter_value].sum()[0]},index=['Minor Groups'])
+aux2 = pd.DataFrame(
+    data={"Ethnic": aux[aux.Ethnic < filter_value].sum()[0]}, index=["Minor Groups"]
+)
 aux = aux.append(aux2)
-aux = aux[aux.Ethnic>=filter_value]
+aux = aux[aux.Ethnic >= filter_value]
 
 
 def func(pct, allvals):
@@ -210,7 +157,7 @@ colors = sns.color_palette("pastel")[0 : aux.shape[0]]
 
 # create pie chart
 plt.figure()
-explode =  (0.05,)* aux.shape[0] 
+explode = (0.05,) * aux.shape[0]
 
 plt.pie(
     aux.Ethnic.values,
@@ -374,26 +321,30 @@ def metric_calculator(
 # In[18]:
 
 
-m = Pipeline([('enc',CatBoostEncoder(sigma=0.5)),('model',LogisticRegression())])
-m.fit(X_tr,y_tr)
+m = Pipeline([("enc", CatBoostEncoder(sigma=0.5)), ("model", LogisticRegression())])
+m.fit(X_tr, y_tr)
 
 
 # In[19]:
 
 
-roc_auc_score(y_te,m.predict_proba(X_te)[:,1])
+roc_auc_score(y_te, m.predict_proba(X_te)[:, 1])
 
 
 # In[20]:
 
 
 res = {}
-for cat,num in X['Ethnic'].value_counts().items():
+for cat, num in X["Ethnic"].value_counts().items():
     COL = "Ethnic"
     GROUP1 = "Asian"
     GROUP2 = cat
-    res[cat] = [metric_calculator(modelo=m,data = X, truth = y,col=COL,group1=GROUP1,group2 =GROUP2),num]
-    
+    res[cat] = [
+        metric_calculator(
+            modelo=m, data=X, truth=y, col=COL, group1=GROUP1, group2=GROUP2
+        ),
+        num,
+    ]
 
 
 # In[21]:
@@ -401,9 +352,9 @@ for cat,num in X['Ethnic'].value_counts().items():
 
 res = pd.DataFrame(res).T
 
-res.columns=['fairness','items']
+res.columns = ["fairness", "items"]
 
-res['items']= res['items'].astype(int)
+res["items"] = res["items"].astype(int)
 
 
 # In[22]:
@@ -490,7 +441,7 @@ def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list
                     ("reg", CatBoostEncoder(a=1, sigma=m, cols=cols_enc)),
                     ("unreg", CatBoostEncoder(a=1, sigma=0, cols=un_regularize)),
                 ]
-            ) 
+            )
 
         pipe = Pipeline([("encoder", encoder), ("model", model)])
         pipe.fit(X_tr, y_tr)
@@ -531,9 +482,18 @@ GROUP2 = "Caucasian"
 # In[27]:
 
 
-cols_enc = ['Agency_Text', 'Sex', 'ScaleSet', 'AssessmentReason',
-       'LegalStatus', 'CustodyStatus', 'DisplayText', 'AssessmentType',
-       'IsCompleted', 'IsDeleted']
+cols_enc = [
+    "Agency_Text",
+    "Sex",
+    "ScaleSet",
+    "AssessmentReason",
+    "LegalStatus",
+    "CustodyStatus",
+    "DisplayText",
+    "AssessmentType",
+    "IsCompleted",
+    "IsDeleted",
+]
 
 
 # In[28]:
@@ -543,17 +503,21 @@ cols_enc = ['Agency_Text', 'Sex', 'ScaleSet', 'AssessmentReason',
 one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
 PARAM = np.linspace(0, 1, 50)
-gaus1 = fair_encoder(model=LogisticRegression(), enc="catboost", param=PARAM,un_regularize=cols_enc)
+gaus1 = fair_encoder(
+    model=LogisticRegression(), enc="catboost", param=PARAM, un_regularize=cols_enc
+)
 PARAM = np.linspace(0, 100_000, 50)
-smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM,un_regularize=cols_enc)
+smooth1 = fair_encoder(
+    model=LogisticRegression(), enc="mestimate", param=PARAM, un_regularize=cols_enc
+)
 
 
 # In[38]:
 
 
-fig, axs = plt.subplots(1, 2,  sharex=True, sharey=True)
+fig, axs = plt.subplots(1, 2, sharex=True, sharey=True)
 
-#LR
+# LR
 axs[0].set_title("Logistic Regression + Gaussian Noise")
 axs[0].scatter(
     gaus1["auc_tot"].values,
@@ -585,14 +549,14 @@ axs[1].scatter(
 axs[1].scatter(
     y=one_hot1.fairness_metric, x=one_hot1.auc_tot, s=100, label="One Hot Encoder"
 )
-fig.savefig('images/encTheory.png')
+fig.savefig("images/encTheory.png")
 fig.show()
 
 
 # In[37]:
 
 
-fig, axs = plt.subplots(1, 2,sharex=True)
+fig, axs = plt.subplots(1, 2, sharex=True)
 
 fig.suptitle("Gaussian regularization target encoding")
 aux = (
@@ -613,20 +577,20 @@ axs[0].set_xlabel("Regularization parameter")
 
 aux = gaus1[["fairness_metric"]].rolling(5).mean().dropna()
 
-axs[1].plot(aux['fairness_metric'], label=GROUP1+' vs '+ GROUP2,color='r')
+axs[1].plot(aux["fairness_metric"], label=GROUP1 + " vs " + GROUP2, color="r")
 
 axs[1].legend()
 axs[1].set_title("Fairness Metric")
 axs[1].set_ylabel("Equal opportunity fairness (TPR)")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig('images/compassHyperGaussian.png')
+plt.savefig("images/compassHyperGaussian.png")
 plt.show()
 
 
 # In[35]:
 
 
-fig, axs = plt.subplots(1, 2,sharex=True)
+fig, axs = plt.subplots(1, 2, sharex=True)
 
 fig.suptitle("Smoothing regularization target encoding")
 aux = (
@@ -647,13 +611,13 @@ axs[0].set_xlabel("Regularization parameter")
 
 aux = smooth1[["fairness_metric"]].rolling(5).mean().dropna()
 
-axs[1].plot(aux['fairness_metric'], label=GROUP1+' vs '+ GROUP2,color='r')
+axs[1].plot(aux["fairness_metric"], label=GROUP1 + " vs " + GROUP2, color="r")
 
 axs[1].legend()
 axs[1].set_title("Fairness Metric")
 axs[1].set_ylabel("Equal opportunity fairness (TPR)")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig('images/compassHyperSmoothing.png')
+plt.savefig("images/compassHyperSmoothing.png")
 plt.show()
 
 
@@ -661,25 +625,45 @@ plt.show()
 
 
 ## LR
-#one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
+# one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
-#PARAM = np.linspace(0, 1, 50)
-#gaus1 = fair_encoder(model=LogisticRegression(), enc="catboost", param=PARAM,un_regularize=cols_enc)
-#PARAM = np.linspace(0, 100, 50)
-#smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM,un_regularize=cols_enc)
+# PARAM = np.linspace(0, 1, 50)
+# gaus1 = fair_encoder(model=LogisticRegression(), enc="catboost", param=PARAM,un_regularize=cols_enc)
+# PARAM = np.linspace(0, 100, 50)
+# smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM,un_regularize=cols_enc)
 ## DT
 one_hot2 = fair_encoder(model=DecisionTreeClassifier(max_depth=5), enc="ohe", param=[0])
 PARAM = np.linspace(0, 1, 50)
-gaus2 = fair_encoder(model=DecisionTreeClassifier(max_depth=5), enc="catboost", param=PARAM,un_regularize=cols_enc)
+gaus2 = fair_encoder(
+    model=DecisionTreeClassifier(max_depth=5),
+    enc="catboost",
+    param=PARAM,
+    un_regularize=cols_enc,
+)
 PARAM = np.linspace(0, 100_000, 50)
-smooth2 = fair_encoder(model=DecisionTreeClassifier(max_depth=5), enc="mestimate", param=PARAM,un_regularize=cols_enc)
+smooth2 = fair_encoder(
+    model=DecisionTreeClassifier(max_depth=5),
+    enc="mestimate",
+    param=PARAM,
+    un_regularize=cols_enc,
+)
 ## GBDT
 one_hot3 = fair_encoder(model=GradientBoostingClassifier(), enc="ohe", param=[0])
 
 PARAM = np.linspace(0, 1, 50)
-gaus3 = fair_encoder(model=GradientBoostingClassifier(), enc="catboost", param=PARAM,un_regularize=cols_enc)
+gaus3 = fair_encoder(
+    model=GradientBoostingClassifier(),
+    enc="catboost",
+    param=PARAM,
+    un_regularize=cols_enc,
+)
 PARAM = np.linspace(0, 100_000, 50)
-smooth3 = fair_encoder(model=GradientBoostingClassifier(), enc="mestimate", param=PARAM,un_regularize=cols_enc)
+smooth3 = fair_encoder(
+    model=GradientBoostingClassifier(),
+    enc="mestimate",
+    param=PARAM,
+    un_regularize=cols_enc,
+)
 
 
 # In[36]:
@@ -687,9 +671,9 @@ smooth3 = fair_encoder(model=GradientBoostingClassifier(), enc="mestimate", para
 
 fig, axs = plt.subplots(3, 2, figsize=(15, 15), sharex=True, sharey=True)
 
-#LR
+# LR
 axs[0, 0].set_title("Logistic Regression + Gaussian Noise")
-#axs[0, 0].axis(xmin=0.5,xmax=13.5)
+# axs[0, 0].axis(xmin=0.5,xmax=13.5)
 axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["fairness_metric"].values,
@@ -701,7 +685,7 @@ axs[0, 0].scatter(
 axs[0, 0].scatter(
     y=one_hot1.fairness_metric, x=one_hot1.auc_tot, s=100, label="One Hot Encoder"
 )
-axs[0,0].legend()
+axs[0, 0].legend()
 axs[0, 1].set_title("Logistic Regression + Smoothing Regularizer")
 axs[0, 1].scatter(
     smooth1["auc_tot"].values,
@@ -772,12 +756,8 @@ axs[2, 1].scatter(
     y=one_hot3.fairness_metric, x=one_hot3.auc_tot, s=100, label="One Hot Encoder"
 )
 
-fig.savefig('images/encTheoryFull.png')
+fig.savefig("images/encTheoryFull.png")
 fig.show()
 
 
 # In[ ]:
-
-
-
-
