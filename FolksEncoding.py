@@ -549,17 +549,13 @@ fig.show()
 ##################
 ### Figure 2 #####
 ##################
-
+"""
+This figure shows the effect of the smoothing regularizer on the AUC of the model
+"""
 fig, axs = plt.subplots(1, 2, sharex=True)
 
 fig.suptitle("Gaussian regularization target encoding")
-aux = (
-    gaus1[["auc_tot", "auc_African-American", "auc_Caucasian"]]
-    .rolling(5)
-    .mean()
-    .dropna()
-)
-
+aux = gaus1.drop(columns=["dp", "aao", "eof"]).rolling(5).mean().dropna()
 for col in aux.columns:
     axs[0].plot(aux[col], label=col)
     # plt.fill_between(aux.index,(aux[col] - stand[col]),(aux[col] + stand[col]),# color="b",alpha=0.1,)
@@ -568,9 +564,11 @@ axs[0].set_title("Model performance")
 axs[0].set_ylabel("AUC")
 axs[0].set_xlabel("Regularization parameter")
 
-aux = gaus1[["dp"]].rolling(5).mean().dropna()
+aux = gaus1[["eof", "dp", "aao"]].rolling(5).mean().dropna()
 
-axs[1].plot(aux["fairness_metric"], label=GROUP1 + " vs " + GROUP2, color="r")
+axs[1].plot(aux["eof"], label="EOF " + GROUP1 + " vs " + GROUP2, color="r")
+axs[1].plot(aux["dp"], label="DP " + GROUP1 + " vs " + GROUP2, color="b")
+axs[1].plot(aux["aao"], label="AAO" + GROUP1 + " vs " + GROUP2, color="g")
 
 axs[1].legend()
 axs[1].set_title("Fairness Metric")
