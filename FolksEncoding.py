@@ -405,18 +405,20 @@ def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list
 COL = "group"
 GROUP1 = "White"
 GROUP2 = "Other"
+# Lenght of the linspace
+POINTS = 10
 
 # %%
 ## LR Experiment
 one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
-PARAM = np.linspace(0, 1, 20)
+PARAM = np.linspace(0, 1, POINTS)
 gaus1 = fair_encoder(
     model=LogisticRegression(),
     enc="catboost",
     param=PARAM,
 )
-PARAM = np.linspace(0, 100_000, 20)
+PARAM = np.linspace(0, 100_000, POINTS)
 smooth1 = fair_encoder(
     model=LogisticRegression(),
     enc="mestimate",
@@ -597,16 +599,21 @@ axs[1].plot(aux["dp"], label=GROUP1 + " vs " + GROUP2, color="r")
 
 axs[1].legend()
 axs[1].set_title("Fairness Metrics")
-axs[1].set_ylabel(")")
+axs[1].set_ylabel("")
 axs[1].set_xlabel("Regularization parameter")
 plt.savefig("images/compassHyperSmoothing.png")
 plt.show()
 
 
-# In[31]:
-
-
-## LR
+# %%
+##################
+### Figure 3 #####
+##################
+"""
+3 Models are trained with different regularization parameters
+"""
+# TRAINING
+## LR -- Removed since it should be already trained
 # one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
 # PARAM = np.linspace(0, 1, 50)
@@ -615,70 +622,149 @@ plt.show()
 # smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM,un_regularize=cols_enc)
 ## DT
 one_hot2 = fair_encoder(model=DecisionTreeClassifier(max_depth=5), enc="ohe", param=[0])
-PARAM = np.linspace(0, 1, 50)
+PARAM = np.linspace(0, 1, POINTS)
 gaus2 = fair_encoder(
     model=DecisionTreeClassifier(max_depth=5),
     enc="catboost",
     param=PARAM,
-    un_regularize=cols_enc,
 )
-PARAM = np.linspace(0, 100_000, 50)
+PARAM = np.linspace(0, 100_000, POINTS)
 smooth2 = fair_encoder(
     model=DecisionTreeClassifier(max_depth=5),
     enc="mestimate",
     param=PARAM,
-    un_regularize=cols_enc,
 )
 ## GBDT
 one_hot3 = fair_encoder(model=GradientBoostingClassifier(), enc="ohe", param=[0])
 
-PARAM = np.linspace(0, 1, 50)
+PARAM = np.linspace(0, 1, POINTS)
 gaus3 = fair_encoder(
     model=GradientBoostingClassifier(),
     enc="catboost",
     param=PARAM,
-    un_regularize=cols_enc,
 )
-PARAM = np.linspace(0, 100_000, 50)
+PARAM = np.linspace(0, 100_000, POINTS)
 smooth3 = fair_encoder(
     model=GradientBoostingClassifier(),
     enc="mestimate",
     param=PARAM,
-    un_regularize=cols_enc,
 )
-
-
-# In[36]:
-
-
+# %%
+## VISUALIZATION OF THE RESULTS
 fig, axs = plt.subplots(3, 2, figsize=(15, 15), sharex=True, sharey=True)
-
 # LR
 axs[0, 0].set_title("Logistic Regression + Gaussian Noise")
-# axs[0, 0].axis(xmin=0.5,xmax=13.5)
+### Fairness metrics plotting
 axs[0, 0].scatter(
     gaus1["auc_tot"].values,
-    gaus1["fairness_metric"].values,
+    gaus1["eof"].values,
     s=100,
     c=gaus1.index.values,
     cmap="Reds",
-    label="Regularization Parameter (Darker=High)",
+    label="EOF Regularization Parameter (Darker=High)",
 )
 axs[0, 0].scatter(
-    y=one_hot1.fairness_metric, x=one_hot1.auc_tot, s=100, label="One Hot Encoder"
+    gaus1["auc_tot"].values,
+    gaus1["dp"].values,
+    s=100,
+    c=gaus1.index.values,
+    cmap="Blues",
+    label="Demographic Parity",
 )
+axs[0, 0].scatter(
+    gaus1["auc_tot"].values,
+    gaus1["aao"].values,
+    s=100,
+    c=gaus1.index.values,
+    cmap="Greens",
+    label="Average Absolute Odds",
+)
+### ONE-HOT
+axs[0, 0].scatter(
+    y=one_hot1["eof"],
+    x=one_hot1.auc_tot,
+    c="r",
+    marker="x",
+    s=100,
+    label="One Hot Encoder EOF",
+)
+axs[0, 0].scatter(
+    y=one_hot1["dp"],
+    x=one_hot1.auc_tot,
+    c="b",
+    marker="x",
+    s=100,
+    label="One Hot Encoder DP",
+)
+axs[0, 0].scatter(
+    y=one_hot1["aao"],
+    x=one_hot1.auc_tot,
+    c="g",
+    marker="x",
+    s=100,
+    label="One Hot Encoder AAO",
+)
+
+### Figure labels
 axs[0, 0].legend()
+axs[0, 0].set(xlabel="AUC")
+axs[0, 1].set(xlabel="AUC")
+axs[0, 0].set(ylabel="Fairness metrics")
 axs[0, 1].set_title("Logistic Regression + Smoothing Regularizer")
+leg = axs[0, 0].get_legend()
+leg.legendHandles[0].set_color("red")
+leg.legendHandles[1].set_color("blue")
+leg.legendHandles[2].set_color("green")
+
 axs[0, 1].scatter(
     smooth1["auc_tot"].values,
-    smooth1["fairness_metric"].values,
+    smooth1["eof"].values,
     s=100,
     c=smooth1.index.values,
     cmap="Reds",
-    label="Regularization Parameter (Darker=High)",
+    label="EOF Regularization Parameter (Darker=High)",
 )
 axs[0, 1].scatter(
-    y=one_hot1.fairness_metric, x=one_hot1.auc_tot, s=100, label="One Hot Encoder"
+    smooth1["auc_tot"].values,
+    smooth1["dp"].values,
+    s=100,
+    c=smooth1.index.values,
+    cmap="Blues",
+    label="Demographic Parity",
+)
+axs[0, 1].scatter(
+    smooth1["auc_tot"].values,
+    smooth1["aao"].values,
+    s=100,
+    c=smooth1.index.values,
+    cmap="Greens",
+    label="Average Absolute Odds",
+)
+
+### ONE-HOT
+axs[0, 1].scatter(
+    y=one_hot1["eof"],
+    x=one_hot1.auc_tot,
+    c="r",
+    marker="x",
+    s=100,
+    label="One Hot Encoder EOF",
+)
+axs[0, 1].scatter(
+    y=one_hot1["dp"],
+    x=one_hot1.auc_tot,
+    c="b",
+    marker="x",
+    s=100,
+    label="One Hot Encoder DP",
+)
+axs[0, 1].scatter(
+    y=one_hot1["aao"],
+    x=one_hot1.auc_tot,
+    c="g",
+    marker="x",
+    s=100,
+    label="One Hot Encoder AAO",
 )
 
 ## DT
@@ -741,5 +827,4 @@ axs[2, 1].scatter(
 fig.savefig("images/encTheoryFull.png")
 fig.show()
 
-
-# In[ ]:
+# %%
