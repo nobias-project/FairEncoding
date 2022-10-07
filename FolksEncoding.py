@@ -118,16 +118,9 @@ plt.pie(
 plt.show()
 
 # %%
+# Split data
 X = ca_features.drop(columns=["label"])
 y = ca_features[["label"]]
-# In[11]:
-for col in X.columns:
-    print(X[col].value_counts())
-for col in X.columns:
-    print(len(X[col].unique()))
-
-
-# %%
 X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
 
 # %%
@@ -282,7 +275,7 @@ roc_auc_score(y_te, m.predict_proba(X_te)[:, 1])
 res = {}
 for cat, num in X["group"].value_counts().items():
     COL = "group"
-    GROUP1 = "White"
+    GROUP1 = "Asian"
     GROUP2 = cat
     res[cat] = [
         metric_calculator(
@@ -341,6 +334,7 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
     ), "Encoder not available or check for spelling mistakes: {}".format(allowed_enc)
 
     cols_enc = set(X_tr.columns) - set(drop_cols)
+    cols_enc = X_tr.select_dtypes(include=["object", "category"]).columns
 
     for m in tqdm(param):
         if enc == "mestimate":
@@ -393,8 +387,8 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
 # %%
 # Experiment parameters
 COL = "group"
-GROUP1 = "White"
-GROUP2 = "Other"
+GROUP1 = "Asian"
+GROUP2 = "Hawaiian"
 # Lenght of the linspace
 POINTS = 10
 
