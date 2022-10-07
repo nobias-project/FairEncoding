@@ -52,10 +52,10 @@ The paper is neatly written and easy to read. The topic is clearly relevant to t
 
 ## Weaknesses ##
 
-- One of my major concerns about the analysis is that I do not understand whether and why it would be meaningful to perform target encoding on categorical data such as gender, ethnicity, etc. Why would it be desirable to impose an ordering of features that can and should not be ordered? E.g., Tab. 1 looks highly problematic to me. The authors should make this clearer.
-- The authors should make it clearer how in Tab. 1 “Hispanic” is assigned the target encoding 0 and “African-American” is assigned 1. The cases seem symmetric in the one hot encoding case. What is meant by “target” here?
-- The abstract contains no information re. the authors’ findings (neither theoretical nor empirical). I would have liked to see key findings highlighted early on in the paper, starting with the abstract.
-- The implications from the theoretical section seem somewhat unclear to me. I’d suggest the authors make this clearer and provide the reader with clear “takeaways”. Right now, the theoretical section feels a bit like a “foreign body” without much of discussion and interpretation. Among others, some intro to section 4 would have been helpful. 
+- One of my major concerns about the analysis is that I do not understand whether and why it would be meaningful to perform target encoding on categorical data such as gender, ethnicity, etc. **Why would it be desirable to impose an ordering of features that can and should not be ordered?** E.g., Tab. 1 looks highly problematic to me. The authors should make this clearer.
+- **The authors should make it clearer how in Tab. 1 “Hispanic” is assigned the target encoding 0 and “African-American” is assigned 1. The cases seem symmetric in the one hot encoding case. What is meant by “target” here?**
+- **The abstract contains no information re. the authors’ findings (neither theoretical nor empirical). I would have liked to see key findings highlighted early on in the paper, starting with the abstract.**
+- The implications from the theoretical section seem somewhat unclear to me. I’d suggest the authors make this clearer and provide the reader with **clear “takeaways”**. Right now, the **theoretical section feels a bit like a “foreign body” without much of discussion and interpretation**. Among others, **some intro to section 4** would have been helpful. 
 - In the experimental section (sec. 5), it seems a bit limiting to only consider equal opportunity fairness. How are the effects on the myriad of other fairness concepts? Would the results -- e.g., that one hot encoding leads to more discriminatory results -- generalize?
 - It would be interesting to also compare other ways of encoding features.
   
@@ -63,21 +63,12 @@ The paper is neatly written and easy to read. The topic is clearly relevant to t
 
 SCORE: -1 (weak reject)
 
-- TEXT:
-
-I recommend weak reject based on my review above.
 
 ## Ethical considerations ##
 
 I think this type of work is important, but I am unclear as to whether a target encoding (imposing an ordering) would ever be a good idea when it comes to sensitive features such as gender or ethnicity.
 
-
-
 # REVIEW 3 -
-
-SUBMISSION: 52
-TITLE: Fairness implications of encoding protected categorical aributes
-AUTHORS: Carlos Mougan, Jose Alvarez, Gourab Patro, Salvatore Ruggieri and Steffen Staab
 
 ## Summary ##
 The paper studies how two categorical feature encoding techniques — one-hot encoding and target encoding — might affect the fairness of a machine learning model. With an emphasis on target encoding, the authors of the paper decompose the bias induced from this encoding into “irreducible bias”, which is due to the inherent discrimination of the model, and “reducible bias” which is due to the large variance on small sample sizes. This paper is relevant to the EAAMO conference because it discusses issues of fairness as it relates to data preprocessing in machine learning.
