@@ -346,21 +346,11 @@ def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list
 
     for m in tqdm(param):
         if enc == "mestimate":
-            encoder = Pipeline(
-                [
-                    ("reg", MEstimateEncoder(m=m, cols=cols_enc)),
-                    ("unreg", MEstimateEncoder(m=0, cols=un_regularize)),
-                ]
-            )
+            encoder = MEstimateEncoder(m=m, cols=cols_enc)
         elif enc == "targetenc":
             encoder = TargetEncoder(smoothing=m)
         elif enc == "leaveoneout":
-            encoder = Pipeline(
-                [
-                    ("reg", LeaveOneOutEncoder(sigma=m, cols=cols_enc)),
-                    ("unreg", LeaveOneOutEncoder(sigma=0, cols=un_regularize)),
-                ]
-            )
+            encoder = LeaveOneOutEncoder(sigma=m, cols=cols_enc)
         elif enc == "ohe":
             encoder = OneHotEncoder(handle_missing=-1)
         elif enc == "woe":
@@ -368,12 +358,7 @@ def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list
         elif enc == "james":
             encoder = JamesSteinEncoder(randomized=True, sigma=m)
         elif enc == "catboost":
-            encoder = Pipeline(
-                [
-                    ("reg", CatBoostEncoder(a=1, sigma=m, cols=cols_enc)),
-                    ("unreg", CatBoostEncoder(a=1, sigma=0, cols=un_regularize)),
-                ]
-            )
+            encoder = CatBoostEncoder(a=1, sigma=0, cols=un_regularize)
         elif enc == "drop":
             encoder = columnDropperTransformer(columns=cols_enc)
 
