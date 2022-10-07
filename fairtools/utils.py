@@ -137,12 +137,13 @@ def scale_output(data):
         StandardScaler().fit_transform(data), columns=data.columns, index=data.index
     )
 
-class columnDropperTransformer():
-    def __init__(self,columns):
-        self.columns=columns
 
-    def transform(self,X,y=None):
-        return X.drop(self.columns,axis=1)
+class columnDropperTransformer:
+    def __init__(self, columns):
+        self.columns = columns
+
+    def transform(self, X, y=None):
+        return X.drop(self.columns, axis=1)
 
     def fit(self, X, y=None):
-        return self 
+        return self
