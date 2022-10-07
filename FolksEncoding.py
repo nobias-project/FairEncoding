@@ -1,6 +1,7 @@
 # %%
 import pandas as pd
 import random
+import pdb
 
 random.seed(0)
 from collections import defaultdict
@@ -47,6 +48,7 @@ from fairtools.utils import (
     metric_calculator,
     plot_rolling,
     scale_output,
+    columnDropperTransformer,
 )
 
 from folktables import (
@@ -332,12 +334,15 @@ def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list
         "woe",
         "james",
         "catboost",
+        "drop",
     ]
     assert (
         enc in allowed_enc
     ), "Encoder not available or check for spelling mistakes: {}".format(allowed_enc)
 
-    cols_enc = set(X_tr.columns) - set(un_regularize)
+    cols_enc = (
+        set(X_tr.columns) - set(un_regularize) - set(X_tr._get_numeric_data().columns)
+    )
 
     for m in tqdm(param):
         if enc == "mestimate":
@@ -369,6 +374,8 @@ def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list
                     ("unreg", CatBoostEncoder(a=1, sigma=0, cols=un_regularize)),
                 ]
             )
+        elif enc == "drop":
+            encoder = columnDropperTransformer(columns=cols_enc)
 
         pipe = Pipeline([("encoder", encoder), ("model", model)])
         pipe.fit(X_tr, y_tr)
@@ -410,6 +417,7 @@ POINTS = 10
 
 # %%
 ## LR Experiment
+no_encoding = fair_encoder(model=LogisticRegression(), enc="drop", param=[0])
 one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
 PARAM = np.linspace(0, 1, POINTS)
@@ -483,6 +491,32 @@ axs[0].scatter(
     label="One Hot Encoder AAO",
 )
 
+## No Encoding - Protected attribute is out
+axs[0].scatter(
+    y=no_encoding["eof"],
+    x=no_encoding.auc_tot,
+    c="r",
+    marker="*",
+    s=100,
+    label="No encoding EOF",
+)
+axs[0].scatter(
+    y=no_encoding["dp"],
+    x=no_encoding.auc_tot,
+    c="b",
+    marker="*",
+    s=100,
+    label="No Encoding DP",
+)
+axs[0].scatter(
+    y=no_encoding["aao"],
+    x=no_encoding.auc_tot,
+    c="g",
+    marker="*",
+    s=100,
+    label="No Encoding AAO",
+)
+
 ### Figure labels
 axs[0].legend()
 axs[0].set(xlabel="AUC")
@@ -543,6 +577,31 @@ axs[1].scatter(
     marker="x",
     s=100,
     label="One Hot Encoder AAO",
+)
+## No Encoding - Protected attribute is out
+axs[1].scatter(
+    y=no_encoding["eof"],
+    x=no_encoding.auc_tot,
+    c="r",
+    marker="*",
+    s=100,
+    label="No encoding EOF",
+)
+axs[1].scatter(
+    y=no_encoding["dp"],
+    x=no_encoding.auc_tot,
+    c="b",
+    marker="*",
+    s=100,
+    label="No Encoding DP",
+)
+axs[1].scatter(
+    y=no_encoding["aao"],
+    x=no_encoding.auc_tot,
+    c="g",
+    marker="*",
+    s=100,
+    label="No Encoding AAO",
 )
 fig.savefig("images/encTheory.png")
 fig.show()
