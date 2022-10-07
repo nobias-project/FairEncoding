@@ -321,7 +321,7 @@ def scale_output(data):
 
 # %%
 # Experiment
-def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list = []):
+def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = []):
     auc = {}
     metrica = []
     auc_tot = []
@@ -340,9 +340,7 @@ def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list
         enc in allowed_enc
     ), "Encoder not available or check for spelling mistakes: {}".format(allowed_enc)
 
-    cols_enc = (
-        set(X_tr.columns) - set(un_regularize) - set(X_tr._get_numeric_data().columns)
-    )
+    cols_enc = set(X_tr.columns) - set(drop_cols)
 
     for m in tqdm(param):
         if enc == "mestimate":
@@ -360,7 +358,7 @@ def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list
         elif enc == "catboost":
             encoder = CatBoostEncoder(a=1, sigma=m, cols=cols_enc)
         elif enc == "drop":
-            encoder = columnDropperTransformer(columns=cols_enc)
+            encoder = columnDropperTransformer(columns=drop_cols)
 
         pipe = Pipeline([("encoder", encoder), ("model", model)])
         pipe.fit(X_tr, y_tr)
@@ -402,7 +400,9 @@ POINTS = 10
 
 # %%
 ## LR Experiment
-no_encoding = fair_encoder(model=LogisticRegression(), enc="drop", param=[0])
+no_encoding = fair_encoder(
+    model=LogisticRegression(), enc="drop", drop_cols=COL, param=[0]
+)
 one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
 PARAM = np.linspace(0, 1, POINTS)
@@ -661,9 +661,9 @@ plt.show()
 # one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
 # PARAM = np.linspace(0, 1, 50)
-# gaus1 = fair_encoder(model=LogisticRegression(), enc="catboost", param=PARAM,un_regularize=cols_enc)
+# gaus1 = fair_encoder(model=LogisticRegression(), enc="catboost", param=PARAM)
 # PARAM = np.linspace(0, 100, 50)
-# smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM,un_regularize=cols_enc)
+# smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM)
 ## DT
 one_hot2 = fair_encoder(model=DecisionTreeClassifier(max_depth=5), enc="ohe", param=[0])
 PARAM = np.linspace(0, 1, POINTS)
