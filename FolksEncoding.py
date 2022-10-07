@@ -358,7 +358,7 @@ def fair_encoder(model, param: list, enc: str = "mestimate", un_regularize: list
         elif enc == "james":
             encoder = JamesSteinEncoder(randomized=True, sigma=m)
         elif enc == "catboost":
-            encoder = CatBoostEncoder(a=1, sigma=0, cols=un_regularize)
+            encoder = CatBoostEncoder(a=1, sigma=m, cols=cols_enc)
         elif enc == "drop":
             encoder = columnDropperTransformer(columns=cols_enc)
 
