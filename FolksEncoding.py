@@ -20,8 +20,6 @@ rcParams["ytick.labelsize"] = 12
 rcParams["figure.figsize"] = 16, 8
 import warnings
 
-warnings.filterwarnings("ignore")
-
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 
@@ -29,7 +27,7 @@ from sklearn.metrics import roc_auc_score, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from scipy.stats import wasserstein_distance
 
 from category_encoders.target_encoder import TargetEncoder
@@ -219,50 +217,79 @@ def calculate_cm(true, preds, metric="tpr"):
 
 
 def metric_calculator(
-    modelo, data: pd.DataFrame, truth: pd.DataFrame, col: str, group1: str, group2: str
+    modelo,
+    data: pd.DataFrame,
+    truth: pd.DataFrame,
+    col: str,
+    reference_group: str,
+    compared_group: str = "All",
+    normalize: bool = True,
 ):
     """
     model: model to be used
     data: data to predict
     truth: ground truth labels
     col: column to be used as group
-    group1: Reference group
-    group2: Discriminated group
+    reference_group: Reference group
+    compared_group: Group to be compared, if all, all groups are compared and the sum is returned
+    normalize: If True, the metric is normalized by ...
     """
     aux = data.copy()
     aux["target"] = truth
 
-    # Filter the data
-    g1 = data[data[col] == group1]
-    g2 = data[data[col] == group2]
+    if compared_group == "All":
+        groups = data[col].unique()
+        # Remove nans
+        groups = groups[~pd.isnull(groups)]
+    else:
+        if compared_group not in data[col].unique():
+            raise ValueError("Group not in data")
+        groups = [compared_group]
 
-    # Filter the ground truth
-    g1_true = aux[aux[col] == group1].target
-    g2_true = aux[aux[col] == group2].target
+    eof_sum = []
+    dp_sum = []
+    aao_sum = []
 
-    # Do predictions
-    p1 = modelo.predict(g1)
-    p2 = modelo.predict(g2)
+    for group2 in groups:
+        # Filter the data
+        g1 = data[data[col] == reference_group]
+        g2 = data[data[col] == group2]
 
-    # Extract metrics for each group
-    ## True Positive
-    tpr1 = calculate_cm(p1, g1_true, metric="tpr")
-    tpr2 = calculate_cm(p2, g2_true, metric="tpr")
-    ## False Positive rates
-    fpr1 = calculate_cm(p1, g1_true, metric="fpr")
-    fpr2 = calculate_cm(p2, g2_true, metric="fpr")
+        # Filter the ground truth
+        g1_true = aux[aux[col] == reference_group].target
+        g2_true = aux[aux[col] == group2].target
 
-    # Calculate fairness metrics
-    ## Equal Opportunity Fairness
-    eof = tpr1 - tpr2
-    ## Demographic Parity
-    dp = wasserstein_distance(p1, p2)
-    ## Average Absolute Odds
-    aao = np.abs(tpr1 - fpr1) + np.abs(
-        tpr2 - fpr2
-    )  # The sum of the absolute differencesbetween the true positive rate and the false positive rates of the unprivileged group and thetrue positive rate and the false positive rates of the privileged group. For a fair model/data thismetric needs to be closer to zero
+        # Do predictions
+        p1 = modelo.predict(g1)
+        p2 = modelo.predict(g2)
 
-    return eof, dp, aao
+        # Extract metrics for each group
+        ## True Positive
+        tpr1 = calculate_cm(p1, g1_true, metric="tpr")
+        tpr2 = calculate_cm(p2, g2_true, metric="tpr")
+        ## False Positive rates
+        fpr1 = calculate_cm(p1, g1_true, metric="fpr")
+        fpr2 = calculate_cm(p2, g2_true, metric="fpr")
+
+        # Calculate fairness metrics
+        ## Equal Opportunity Fairness
+        eof = tpr1 - tpr2
+        ## Demographic Parity
+        dp = wasserstein_distance(p1, p2)
+        ## Average Absolute Odds
+        aao = np.abs(tpr1 - fpr1) + np.abs(
+            tpr2 - fpr2
+        )  # The sum of the absolute differencesbetween the true positive rate and the false positive rates of the unprivileged group and thetrue positive rate and the false positive rates of the privileged group. For a fair model/data thismetric needs to be closer to zero
+        eof_sum.append(eof)
+        dp_sum.append(dp)
+        aao_sum.append(aao)
+
+    if normalize:
+        if compared_group == "All":
+            eof_sum = MinMaxScaler().fit_transform(np.array(eof_sum).reshape(-1, 1))
+            dp_sum = MinMaxScaler().fit_transform(np.array(dp_sum).reshape(-1, 1))
+            aao_sum = MinMaxScaler().fit_transform(np.array(aao_sum).reshape(-1, 1))
+    return np.abs(eof_sum).sum(), np.absolute(dp_sum).sum(), np.absolute(aao_sum).sum()
 
 
 # %%
@@ -270,16 +297,30 @@ def metric_calculator(
 m = Pipeline([("enc", CatBoostEncoder(sigma=0.5)), ("model", LogisticRegression())])
 m.fit(X_tr, y_tr)
 roc_auc_score(y_te, m.predict_proba(X_te)[:, 1])
-
+# %%
+metric_calculator(
+    modelo=m,
+    data=X,
+    truth=y,
+    col=COL,
+    reference_group="White",
+    compared_group="All",
+    normalize=True,
+)
 # %%
 res = {}
 for cat, num in X["group"].value_counts().items():
     COL = "group"
-    GROUP1 = "Asian"
+    REFERENCE_GROUP = "Asian"
     GROUP2 = cat
     res[cat] = [
         metric_calculator(
-            modelo=m, data=X, truth=y, col=COL, group1=GROUP1, group2=GROUP2
+            modelo=m,
+            data=X,
+            truth=y,
+            col=COL,
+            reference_group=REFERENCE_GROUP,
+            compared_group=GROUP2,
         ),
         num,
     ]
@@ -363,8 +404,8 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
                 data=X_tr,
                 truth=y_tr,
                 col=COL,
-                group1=GROUP1,
-                group2=GROUP2,
+                reference_group=GROUP1,
+                compared_group=GROUP2,
             )
         )
         auc = auc_group(model=pipe, data=X_te, y_true=y_te, dicc=auc, group=COL)
@@ -379,7 +420,11 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
     res = res.drop(columns="fairness_metric")
     res["auc_tot"] = auc_tot
     res["auc_" + GROUP1] = auc[GROUP1]
-    res["auc_" + GROUP2] = auc[GROUP2]
+    try:
+        res["auc_" + GROUP2] = auc[GROUP2]
+    except:
+        warnings.warn("Eventually should be fixed", DeprecationWarning)
+        res["auc_" + GROUP2] = auc_tot
 
     return res
 
@@ -387,8 +432,8 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
 # %%
 # Experiment parameters
 COL = "group"
-GROUP1 = "Asian"
-GROUP2 = "Hawaiian"
+GROUP1 = "White"
+GROUP2 = "All"
 # Lenght of the linspace
 POINTS = 10
 
