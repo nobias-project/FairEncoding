@@ -1,7 +1,7 @@
 SUBMISSION: 480
 TITLE: Fairness implications of encoding protected categorical attributes
 
--------------------------  METAREVIEW  ------------------------
+##  METAREVIEW  ##
 While the reviewers agreed that the topic being studied was well-suited for this conference, they felt that this paper isn't yet ready for publication.
 
 The reviewers point out significant limitations in the paper, including
@@ -13,14 +13,14 @@ I'd encourage the authors to integrate the reviewers' feedback in any future rev
 
 
 
------------------------ REVIEW 1 ---------------------
+## REVIEW 1 ##
 SUBMISSION: 480
 TITLE: Fairness implications of encoding protected categorical attributes
 AUTHORS: Carlos Mougan, Jose Alvarez, Gourab K Patro, Salvatore Ruggieri and Steffen Staab
 
------------ Overall evaluation -----------
+## Overall evaluation ##
 SCORE: -2 (reject)
------ TEXT:
+## TEXT:
 The authors examine different ways of encoding categorical sensitive/protected attributes for binary classification tasks. In particular,  they consider one-hot encoding (which encodes the k-th value of the sensitive attribute by the k-th standard basis vector) and several variants of target encoding (all of which encodes different values of the sensitive attribute by real numbers). Their goal is to study the effect of different encodings on the performance and group fairness of a binary classifier — where performance is measured by predictive accuracy or AUC and group fairness is measured by the difference in true positive rates across protected groups. 
 
 If different encoding schemes have a non-negligible effect on the performance/fairness of binary classifiers, then an analysis of these effects could inform standard encoding schemes in ML.
@@ -37,29 +37,27 @@ In lines 417 to 428, the authors argue that target encoding with Gaussian noise 
 Minor suggestions
 1. I think it would be useful to define some of the terms used in the paper (e.g., AUC, prediction/classification error)  at the beginning of Section 3.
 2. Some suggestions for improving the figures: Table 1 overflows the horizontal margin and the statistics of smaller groups are not readable in Figure 1.
------------ Ethical review -----------
+## Ethical review ##
 This paper does not require an ethical review.
 
 
 
------------------------ REVIEW 2 ---------------------
+## REVIEW 2 ##
 SUBMISSION: 480
 TITLE: Fairness implications of encoding protected categorical attributes
 AUTHORS: Carlos Mougan, Jose Alvarez, Gourab K Patro, Salvatore Ruggieri and Steffen Staab
 
------------ Overall evaluation -----------
+## Overall evaluation ##
 SCORE: -2 (reject)
------ TEXT:
+## TEXT:
 Summary of contributions: This paper studies the relationship between the encoding of a categorical protected attribute in a binary classification model and the resulting difference in true positive rates across groups, or equality of opportunity measures. Specifically, they compare simple one-hot encoding with "target smoothing," where "categorical features are replaced with the mean target value of each respective category." Theoretically, they study simple examples when the binary classifier makes decisions solely based on the protected attribute, and look at the effects of target smoothing on differences in true positive rates. Empirically, they train logistic regression models and and decision trees with target smoothing on two benchmark datasets.
 
-----------
-Strengths:
+## Strengths:
 - The differentiation between "irreducible" and "reducible" bias is helpful. The most significant contribution of this work in my opinion is the split characterization of irreducible and reducible bias under different smoothing/regularization methods.
 
 - The techniques of target smoothing and Gaussian regularization are mostly clearly presented and simple to implement.
 
-----------
-Weaknesses:
+## Weaknesses:
 
 - This paper is missing any discussion on the relationship between the categorical feature encoding and the architecture of the model taking that encoding as input. This is a significant gap in practical relevance.
 
@@ -77,19 +75,19 @@ The notation is unclear in several places:
 
 - The theoretical discussion of the effects of Gaussian noise in lines 418-423 is confusing to me. Line 409 suggests that they add Gaussian noise directly to the target encoding estimator \hat{p}_i. How does this lead to a change in the observed proportion of positives for X = x_i, or a change in the instances in the training set (lines 418-419)? Are they resampling the x_i after adding Gaussian noise? 
 
-----------
-Overall evaluation: This paper's contributions seem too sparse in my opinion. The theory is not really relevant enough to practice. The overall idea of using smoothing to enforce fairness is also highly dependent on the model architecture, which this paper does not address.
+## Overall evaluation:
+ This paper's contributions seem too sparse in my opinion. The theory is not really relevant enough to practice. The overall idea of using smoothing to enforce fairness is also highly dependent on the model architecture, which this paper does not address.
 
 
 
------------------------ REVIEW 3 ---------------------
+## REVIEW 3 ##
 SUBMISSION: 480
 TITLE: Fairness implications of encoding protected categorical attributes
 AUTHORS: Carlos Mougan, Jose Alvarez, Gourab K Patro, Salvatore Ruggieri and Steffen Staab
 
------------ Overall evaluation -----------
+## Overall evaluation ##
 SCORE: 0 (borderline paper)
------ TEXT:
+## TEXT:
 This paper considers implications of how one encodes sensitive categorical attributes. In order to run a machine learning algorithm one needs to convert categorical random variables into mathematical forms. One-hot encoding and target encoding are two of the most natural and popular methods to solve this problem. This paper studies the implications of both these encodings on fairness. Naturally when the number of examples with a particular value of the protected attribute are low, the models tend to "overfit" and cause high variance. The paper proposes smoothing such as +1/Gaussian smoothing.
 
 The positives:
