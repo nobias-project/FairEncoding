@@ -43,7 +43,6 @@ from tqdm import tqdm
 from category_encoders import OneHotEncoder
 from fairtools.utils import (
     explain,
-    
     fit_predict,
     metric_calculator,
     plot_rolling,
