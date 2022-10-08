@@ -429,10 +429,9 @@ GROUP1 = "White"
 GROUP2 = "All"
 # Lenght of the linspace
 POINTS = 10
-
 # %%
 ## LR Experiment
-no_encoding = fair_encoder(
+no_encoding1 = fair_encoder(
     model=LogisticRegression(), enc="drop", drop_cols=COL, param=[0]
 )
 one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
@@ -510,24 +509,24 @@ axs[0].scatter(
 
 ## No Encoding - Protected attribute is out
 axs[0].scatter(
-    y=no_encoding["eof"],
-    x=no_encoding.auc_tot,
+    y=no_encoding1["eof"],
+    x=no_encoding1.auc_tot,
     c="r",
     marker="*",
     s=100,
     label="No encoding EOF",
 )
 axs[0].scatter(
-    y=no_encoding["dp"],
-    x=no_encoding.auc_tot,
+    y=no_encoding1["dp"],
+    x=no_encoding1.auc_tot,
     c="b",
     marker="*",
     s=100,
     label="No Encoding DP",
 )
 axs[0].scatter(
-    y=no_encoding["aao"],
-    x=no_encoding.auc_tot,
+    y=no_encoding1["aao"],
+    x=no_encoding1.auc_tot,
     c="g",
     marker="*",
     s=100,
@@ -597,24 +596,24 @@ axs[1].scatter(
 )
 ## No Encoding - Protected attribute is out
 axs[1].scatter(
-    y=no_encoding["eof"],
-    x=no_encoding.auc_tot,
+    y=no_encoding1["eof"],
+    x=no_encoding1.auc_tot,
     c="r",
     marker="*",
     s=100,
     label="No encoding EOF",
 )
 axs[1].scatter(
-    y=no_encoding["dp"],
-    x=no_encoding.auc_tot,
+    y=no_encoding1["dp"],
+    x=no_encoding1.auc_tot,
     c="b",
     marker="*",
     s=100,
     label="No Encoding DP",
 )
 axs[1].scatter(
-    y=no_encoding["aao"],
-    x=no_encoding.auc_tot,
+    y=no_encoding1["aao"],
+    x=no_encoding1.auc_tot,
     c="g",
     marker="*",
     s=100,
@@ -698,6 +697,9 @@ plt.show()
 # smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM)
 ## DT
 one_hot2 = fair_encoder(model=DecisionTreeClassifier(max_depth=5), enc="ohe", param=[0])
+no_encoding2 = fair_encoder(
+    model=DecisionTreeClassifier(max_depth=5), enc="drop", drop_cols=COL, param=[0]
+)
 PARAM = np.linspace(0, 1, POINTS)
 gaus2 = fair_encoder(
     model=DecisionTreeClassifier(max_depth=5),
@@ -712,7 +714,9 @@ smooth2 = fair_encoder(
 )
 ## GBDT
 one_hot3 = fair_encoder(model=GradientBoostingClassifier(), enc="ohe", param=[0])
-
+no_encoding3 = fair_encoder(
+    model=GradientBoostingClassifier(), enc="drop", drop_cols=COL, param=[0]
+)
 PARAM = np.linspace(0, 1, POINTS)
 gaus3 = fair_encoder(
     model=GradientBoostingClassifier(),
@@ -728,7 +732,8 @@ smooth3 = fair_encoder(
 # %%
 ## VISUALIZATION OF THE RESULTS
 fig, axs = plt.subplots(3, 2, figsize=(15, 15), sharex=True, sharey=True)
-# LR
+######### LR #########
+########################
 axs[0, 0].set_title("Logistic Regression + Gaussian Noise")
 ### Fairness metrics plotting
 axs[0, 0].scatter(
@@ -779,6 +784,32 @@ axs[0, 0].scatter(
     marker="x",
     s=100,
     label="One Hot Encoder AAO",
+)
+
+## No Encoding - Protected attribute is out
+axs[0, 0].scatter(
+    y=no_encoding1["eof"],
+    x=no_encoding1.auc_tot,
+    c="r",
+    marker="*",
+    s=100,
+    label="No encoding EOF",
+)
+axs[0, 0].scatter(
+    y=no_encoding1["dp"],
+    x=no_encoding1.auc_tot,
+    c="b",
+    marker="*",
+    s=100,
+    label="No Encoding DP",
+)
+axs[0, 0].scatter(
+    y=no_encoding1["aao"],
+    x=no_encoding1.auc_tot,
+    c="g",
+    marker="*",
+    s=100,
+    label="No Encoding AAO",
 )
 
 ### Figure labels
@@ -842,62 +873,363 @@ axs[0, 1].scatter(
     s=100,
     label="One Hot Encoder AAO",
 )
-
-## DT
+## No Encoding - Protected attribute is out
+axs[0, 1].scatter(
+    y=no_encoding1["eof"],
+    x=no_encoding1.auc_tot,
+    c="r",
+    marker="*",
+    s=100,
+    label="No encoding EOF",
+)
+axs[0, 1].scatter(
+    y=no_encoding1["dp"],
+    x=no_encoding1.auc_tot,
+    c="b",
+    marker="*",
+    s=100,
+    label="No Encoding DP",
+)
+axs[0, 1].scatter(
+    y=no_encoding1["aao"],
+    x=no_encoding1.auc_tot,
+    c="g",
+    marker="*",
+    s=100,
+    label="No Encoding AAO",
+)
+######### DT #########
+#######################
 axs[1, 0].set_title("Decision Tree + Gaussian Noise")
-axs[1, 0].set(ylabel="Equal opportunity fairness (TPR)")
+### Fairness metrics plotting
 axs[1, 0].scatter(
     gaus2["auc_tot"].values,
-    gaus2["fairness_metric"].values,
+    gaus2["eof"].values,
     s=100,
     c=gaus2.index.values,
     cmap="Reds",
-    label="Regularization Parameter (Darker=High)",
+    label="EOF Regularization Parameter (Darker=High)",
 )
 axs[1, 0].scatter(
-    y=one_hot2.fairness_metric, x=one_hot2.auc_tot, s=100, label="One Hot Encoder"
+    gaus2["auc_tot"].values,
+    gaus2["dp"].values,
+    s=100,
+    c=gaus2.index.values,
+    cmap="Blues",
+    label="Demographic Parity",
+)
+axs[1, 0].scatter(
+    gaus2["auc_tot"].values,
+    gaus2["aao"].values,
+    s=100,
+    c=gaus2.index.values,
+    cmap="Greens",
+    label="Average Absolute Odds",
+)
+### ONE-HOT
+axs[1, 0].scatter(
+    y=one_hot2["eof"],
+    x=one_hot2.auc_tot,
+    c="r",
+    marker="x",
+    s=100,
+    label="One Hot Encoder EOF",
+)
+axs[1, 0].scatter(
+    y=one_hot2["dp"],
+    x=one_hot2.auc_tot,
+    c="b",
+    marker="x",
+    s=100,
+    label="One Hot Encoder DP",
+)
+axs[1, 0].scatter(
+    y=one_hot2["aao"],
+    x=one_hot2.auc_tot,
+    c="g",
+    marker="x",
+    s=100,
+    label="One Hot Encoder AAO",
 )
 
+## No Encoding - Protected attribute is out
+axs[1, 0].scatter(
+    y=no_encoding2["eof"],
+    x=no_encoding2.auc_tot,
+    c="r",
+    marker="*",
+    s=100,
+    label="No encoding EOF",
+)
+axs[1, 0].scatter(
+    y=no_encoding2["dp"],
+    x=no_encoding2.auc_tot,
+    c="b",
+    marker="*",
+    s=100,
+    label="No Encoding DP",
+)
+axs[1, 0].scatter(
+    y=no_encoding2["aao"],
+    x=no_encoding2.auc_tot,
+    c="g",
+    marker="*",
+    s=100,
+    label="No Encoding AAO",
+)
+
+### Figure labels
+axs[1, 0].legend()
+axs[1, 0].set(xlabel="AUC")
+axs[1, 1].set(xlabel="AUC")
+axs[1, 0].set(ylabel="Fairness metrics")
 axs[1, 1].set_title("Decision Tree + Smoothing Regularizer")
+leg = axs[1, 0].get_legend()
+leg.legendHandles[0].set_color("red")
+leg.legendHandles[1].set_color("blue")
+leg.legendHandles[2].set_color("green")
+
 axs[1, 1].scatter(
     smooth2["auc_tot"].values,
-    smooth2["fairness_metric"].values,
+    smooth2["eof"].values,
     s=100,
     c=smooth2.index.values,
     cmap="Reds",
-    label="Regularization Parameter (Darker=High)",
+    label="EOF Regularization Parameter (Darker=High)",
 )
 axs[1, 1].scatter(
-    y=one_hot2.fairness_metric, x=one_hot2.auc_tot, s=100, label="One Hot Encoder"
+    smooth2["auc_tot"].values,
+    smooth2["dp"].values,
+    s=100,
+    c=smooth2.index.values,
+    cmap="Blues",
+    label="Demographic Parity",
+)
+axs[1, 1].scatter(
+    smooth2["auc_tot"].values,
+    smooth2["aao"].values,
+    s=100,
+    c=smooth2.index.values,
+    cmap="Greens",
+    label="Average Absolute Odds",
 )
 
-# GBDT
+### ONE-HOT
+axs[1, 1].scatter(
+    y=one_hot2["eof"],
+    x=one_hot2.auc_tot,
+    c="r",
+    marker="x",
+    s=100,
+    label="One Hot Encoder EOF",
+)
+axs[1, 1].scatter(
+    y=one_hot2["dp"],
+    x=one_hot2.auc_tot,
+    c="b",
+    marker="x",
+    s=100,
+    label="One Hot Encoder DP",
+)
+axs[1, 1].scatter(
+    y=one_hot2["aao"],
+    x=one_hot2.auc_tot,
+    c="g",
+    marker="x",
+    s=100,
+    label="One Hot Encoder AAO",
+)
+## No Encoding - Protected attribute is out
+axs[1, 1].scatter(
+    y=no_encoding2["eof"],
+    x=no_encoding2.auc_tot,
+    c="r",
+    marker="*",
+    s=100,
+    label="No encoding EOF",
+)
+axs[1, 1].scatter(
+    y=no_encoding2["dp"],
+    x=no_encoding2.auc_tot,
+    c="b",
+    marker="*",
+    s=100,
+    label="No Encoding DP",
+)
+axs[1, 1].scatter(
+    y=no_encoding2["aao"],
+    x=no_encoding2.auc_tot,
+    c="g",
+    marker="*",
+    s=100,
+    label="No Encoding AAO",
+)
+
+######### GBDT #########
+#######################
 axs[2, 0].set_title("Gradient Boosting + Gaussian Noise")
-axs[2, 0].set(xlabel="AUC")
+### Fairness metrics plotting
 axs[2, 0].scatter(
     gaus3["auc_tot"].values,
-    gaus3["fairness_metric"].values,
+    gaus3["eof"].values,
     s=100,
     c=gaus3.index.values,
     cmap="Reds",
-    label="Regularization Parameter (Darker=High)",
+    label="EOF Regularization Parameter (Darker=High)",
 )
 axs[2, 0].scatter(
-    y=one_hot3.fairness_metric, x=one_hot3.auc_tot, s=100, label="One Hot Encoder"
+    gaus3["auc_tot"].values,
+    gaus3["dp"].values,
+    s=100,
+    c=gaus3.index.values,
+    cmap="Blues",
+    label="Demographic Parity",
+)
+axs[2, 0].scatter(
+    gaus3["auc_tot"].values,
+    gaus3["aao"].values,
+    s=100,
+    c=gaus3.index.values,
+    cmap="Greens",
+    label="Average Absolute Odds",
+)
+### ONE-HOT
+axs[2, 0].scatter(
+    y=one_hot3["eof"],
+    x=one_hot3.auc_tot,
+    c="r",
+    marker="x",
+    s=100,
+    label="One Hot Encoder EOF",
+)
+axs[2, 0].scatter(
+    y=one_hot3["dp"],
+    x=one_hot3.auc_tot,
+    c="b",
+    marker="x",
+    s=100,
+    label="One Hot Encoder DP",
+)
+axs[2, 0].scatter(
+    y=one_hot3["aao"],
+    x=one_hot3.auc_tot,
+    c="g",
+    marker="x",
+    s=100,
+    label="One Hot Encoder AAO",
 )
 
-axs[2, 1].set_title("Gradient Boosting + Smoothing Regularizer")
+## No Encoding - Protected attribute is out
+axs[2, 0].scatter(
+    y=no_encoding3["eof"],
+    x=no_encoding3.auc_tot,
+    c="r",
+    marker="*",
+    s=100,
+    label="No encoding EOF",
+)
+axs[2, 0].scatter(
+    y=no_encoding3["dp"],
+    x=no_encoding3.auc_tot,
+    c="b",
+    marker="*",
+    s=100,
+    label="No Encoding DP",
+)
+axs[2, 0].scatter(
+    y=no_encoding3["aao"],
+    x=no_encoding3.auc_tot,
+    c="g",
+    marker="*",
+    s=100,
+    label="No Encoding AAO",
+)
+
+### Figure labels
+axs[2, 0].legend()
+axs[2, 0].set(xlabel="AUC")
 axs[2, 1].set(xlabel="AUC")
+axs[2, 0].set(ylabel="Fairness metrics")
+axs[2, 1].set_title("Gradient Boosting + Smoothing Regularizer")
+leg = axs[2, 0].get_legend()
+leg.legendHandles[0].set_color("red")
+leg.legendHandles[1].set_color("blue")
+leg.legendHandles[2].set_color("green")
+
 axs[2, 1].scatter(
     smooth3["auc_tot"].values,
-    smooth3["fairness_metric"].values,
+    smooth3["eof"].values,
     s=100,
     c=smooth3.index.values,
     cmap="Reds",
-    label="Regularization Parameter (Darker=High)",
+    label="EOF Regularization Parameter (Darker=High)",
 )
 axs[2, 1].scatter(
-    y=one_hot3.fairness_metric, x=one_hot3.auc_tot, s=100, label="One Hot Encoder"
+    smooth3["auc_tot"].values,
+    smooth3["dp"].values,
+    s=100,
+    c=smooth3.index.values,
+    cmap="Blues",
+    label="Demographic Parity",
+)
+axs[2, 1].scatter(
+    smooth3["auc_tot"].values,
+    smooth3["aao"].values,
+    s=100,
+    c=smooth3.index.values,
+    cmap="Greens",
+    label="Average Absolute Odds",
+)
+
+### ONE-HOT
+axs[2, 1].scatter(
+    y=one_hot3["eof"],
+    x=one_hot3.auc_tot,
+    c="r",
+    marker="x",
+    s=100,
+    label="One Hot Encoder EOF",
+)
+axs[2, 1].scatter(
+    y=one_hot3["dp"],
+    x=one_hot3.auc_tot,
+    c="b",
+    marker="x",
+    s=100,
+    label="One Hot Encoder DP",
+)
+axs[2, 1].scatter(
+    y=one_hot3["aao"],
+    x=one_hot3.auc_tot,
+    c="g",
+    marker="x",
+    s=100,
+    label="One Hot Encoder AAO",
+)
+## No Encoding - Protected attribute is out
+axs[2, 1].scatter(
+    y=no_encoding3["eof"],
+    x=no_encoding3.auc_tot,
+    c="r",
+    marker="*",
+    s=100,
+    label="No encoding EOF",
+)
+axs[2, 1].scatter(
+    y=no_encoding3["dp"],
+    x=no_encoding3.auc_tot,
+    c="b",
+    marker="*",
+    s=100,
+    label="No Encoding DP",
+)
+axs[2, 1].scatter(
+    y=no_encoding3["aao"],
+    x=no_encoding3.auc_tot,
+    c="g",
+    marker="*",
+    s=100,
+    label="No Encoding AAO",
 )
 
 fig.savefig("images/encTheoryFull.png")
