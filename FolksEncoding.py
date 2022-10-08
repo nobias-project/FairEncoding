@@ -27,11 +27,10 @@ from sklearn.linear_model import LogisticRegression
 
 from sklearn.metrics import roc_auc_score, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from scipy.stats import wasserstein_distance
-
+from xgboost import XGBClassifier
 from category_encoders.target_encoder import TargetEncoder
 from category_encoders.m_estimate import MEstimateEncoder
 from category_encoders.cat_boost import CatBoostEncoder
@@ -159,9 +158,7 @@ def explain(xgb: bool = True):
     Provide a SHAP explanation by fitting MEstimate and GBDT
     """
     if xgb:
-        pipe = Pipeline(
-            [("encoder", MEstimateEncoder()), ("model", GradientBoostingClassifier())]
-        )
+        pipe = Pipeline([("encoder", MEstimateEncoder()), ("model", XGBClassifier())])
         pipe.fit(X_tr, y_tr)
         explainer = shap.Explainer(pipe[1])
         shap_values = explainer(pipe[:-1].transform(X_tr))
@@ -713,19 +710,17 @@ smooth2 = fair_encoder(
     param=PARAM,
 )
 ## GBDT
-one_hot3 = fair_encoder(model=GradientBoostingClassifier(), enc="ohe", param=[0])
-no_encoding3 = fair_encoder(
-    model=GradientBoostingClassifier(), enc="drop", drop_cols=COL, param=[0]
-)
+one_hot3 = fair_encoder(model=XGBClassifier(), enc="ohe", param=[0])
+no_encoding3 = fair_encoder(model=XGBClassifier(), enc="drop", drop_cols=COL, param=[0])
 PARAM = np.linspace(0, 1, POINTS)
 gaus3 = fair_encoder(
-    model=GradientBoostingClassifier(),
+    model=XGBClassifier(),
     enc="catboost",
     param=PARAM,
 )
 PARAM = np.linspace(0, 100_000, POINTS)
 smooth3 = fair_encoder(
-    model=GradientBoostingClassifier(),
+    model=XGBClassifier(),
     enc="mestimate",
     param=PARAM,
 )
