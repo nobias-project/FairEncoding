@@ -12,32 +12,6 @@ def fit_predict(modelo, enc, data, target, test):
     pipe.fit(data, target)
     return pipe.predict(test)
 
-
-def auc_group(model, data, y_true, dicc, group: str = "", min_samples: int = 50):
-
-    aux = data.copy()
-    aux["target"] = y_true
-    cats = aux[group].value_counts()
-    cats = cats[cats > min_samples].index.tolist()
-    cats = cats + ["all"]
-
-    if len(dicc) == 0:
-        dicc = defaultdict(list, {k: [] for k in cats})
-
-    for cat in cats:
-        if cat != "all":
-            aux2 = aux[aux[group] == cat]
-            preds = model.predict_proba(aux2.drop(columns="target"))[:, 1]
-            truth = aux2["target"]
-            dicc[cat].append(roc_auc_score(truth, preds))
-        elif cat == "all":
-            dicc[cat].append(roc_auc_score(y_true, model.predict_proba(data)[:, 1]))
-        else:
-            pass
-
-    return dicc
-
-
 def explain(xgb: bool = True):
     """
     Provide a SHAP explanation by fitting MEstimate and GBDT

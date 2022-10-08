@@ -43,7 +43,7 @@ from tqdm import tqdm
 from category_encoders import OneHotEncoder
 from fairtools.utils import (
     explain,
-    auc_group,
+    
     fit_predict,
     metric_calculator,
     plot_rolling,
@@ -410,6 +410,7 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
             )
         )
         auc = auc_group(model=pipe, data=X_te, y_true=y_te, dicc=auc, group=COL)
+        pdb.set_trace()
         auc_tot.append(roc_auc_score(y_te, pipe.predict_proba(X_te)[:, 1]))
 
     # Results formatting
