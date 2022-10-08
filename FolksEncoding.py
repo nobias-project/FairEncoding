@@ -297,15 +297,6 @@ m = Pipeline([("enc", CatBoostEncoder(sigma=0.5)), ("model", LogisticRegression(
 m.fit(X_tr, y_tr)
 roc_auc_score(y_te, m.predict_proba(X_te)[:, 1])
 # %%
-metric_calculator(
-    modelo=m,
-    data=X,
-    truth=y,
-    col="group",
-    reference_group="White",
-    compared_group="All",
-)
-# %%
 res = {}
 for cat, num in X["group"].value_counts().items():
     COL = "group"
@@ -419,15 +410,15 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
     res = res.drop(columns="fairness_metric")
 
     ## AUC
+    auc = pd.DataFrame(auc, index=param)
     res["auc_tot"] = auc_tot  # Macro
-    res["auc_micro"] = pd.DataFrame(auc, index=param).drop(columns=["all"]).mean(axis=1)
+    res["auc_micro"] = auc.drop(columns=["all"]).mean(axis=1)
     res["auc_" + GROUP1] = auc[GROUP1]
-    try:
-        res["auc_" + GROUP2] = auc[GROUP2]
-    except:
-        warnings.warn("Eventually should be fixed", DeprecationWarning)
-        res["auc_" + GROUP2] = auc_tot
-
+    for col1 in auc.columns:
+        try:
+            res["auc_" + col1] = auc[col1]
+        except:
+            print("Eventually should be fixed", col1)
     return res
 
 
@@ -438,6 +429,7 @@ GROUP1 = "White"
 GROUP2 = "All"
 # Lenght of the linspace
 POINTS = 10
+
 # %%
 ## LR Experiment
 no_encoding = fair_encoder(
@@ -631,7 +623,6 @@ axs[1].scatter(
 fig.savefig("images/encTheory.png")
 fig.show()
 # %%
-# %%
 ### Figure 2 #####
 ##################
 """
@@ -667,7 +658,7 @@ plt.show()
 fig, axs = plt.subplots(1, 2, sharex=True)
 
 fig.suptitle("Smoothing regularization target encoding")
-aux = smooth1[["auc_tot", "auc_micro"]]  # .rolling(5).mean().dropna()
+aux = smooth1.drop(columns=["dp", "aao", "eof"])  # .rolling(5).mean().dropna()
 
 
 for col in aux.columns:
