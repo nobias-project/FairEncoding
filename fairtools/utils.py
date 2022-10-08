@@ -12,6 +12,7 @@ def fit_predict(modelo, enc, data, target, test):
     pipe.fit(data, target)
     return pipe.predict(test)
 
+
 def explain(xgb: bool = True):
     """
     Provide a SHAP explanation by fitting MEstimate and GBDT

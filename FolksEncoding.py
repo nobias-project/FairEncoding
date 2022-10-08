@@ -304,7 +304,6 @@ metric_calculator(
     col="group",
     reference_group="White",
     compared_group="All",
-    normalize=True,
 )
 # %%
 res = {}
@@ -408,7 +407,6 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
             )
         )
         auc = auc_group(model=pipe, data=X_te, y_true=y_te, dicc=auc, group=COL)
-        pdb.set_trace()
         auc_tot.append(roc_auc_score(y_te, pipe.predict_proba(X_te)[:, 1]))
 
     # Results formatting
@@ -420,12 +418,9 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
     res["aao"] = res["fairness_metric"].apply(lambda x: x[2])
     res = res.drop(columns="fairness_metric")
 
-    ## Scale metrics for viz purposes
-    sc = MinMaxScaler()
-    # res["eof"] = res["eof"] / res["eof"].mean()
-    # res["dp"] = res["dp"] / res["dp"].mean()
-    # res["aao"] = res["aao"] / res["aao"].mean()
-    res["auc_tot"] = auc_tot
+    ## AUC
+    res["auc_tot"] = auc_tot  # Macro
+    res["auc_micro"] = pd.DataFrame(auc, index=param).drop(columns=["all"]).mean(axis=1)
     res["auc_" + GROUP1] = auc[GROUP1]
     try:
         res["auc_" + GROUP2] = auc[GROUP2]
@@ -443,7 +438,6 @@ GROUP1 = "White"
 GROUP2 = "All"
 # Lenght of the linspace
 POINTS = 10
-
 # %%
 ## LR Experiment
 no_encoding = fair_encoder(
@@ -638,7 +632,6 @@ fig.savefig("images/encTheory.png")
 fig.show()
 # %%
 # %%
-##################
 ### Figure 2 #####
 ##################
 """
@@ -647,7 +640,8 @@ This figure shows the effect of the smoothing regularizer on the AUC of the mode
 fig, axs = plt.subplots(1, 2, sharex=True)
 
 fig.suptitle("Gaussian regularization target encoding")
-aux = gaus1.drop(columns=["dp", "aao", "eof"]).rolling(5).mean().dropna()
+aux = gaus1.drop(columns=["dp", "aao", "eof"])  # .rolling(5).mean().dropna()
+
 for col in aux.columns:
     axs[0].plot(aux[col], label=col)
     # plt.fill_between(aux.index,(aux[col] - stand[col]),(aux[col] + stand[col]),# color="b",alpha=0.1,)
@@ -656,7 +650,7 @@ axs[0].set_title("Model performance")
 axs[0].set_ylabel("AUC")
 axs[0].set_xlabel("Regularization parameter")
 
-aux = gaus1[["eof", "dp", "aao"]].rolling(5).mean().dropna()
+aux = gaus1[["eof", "dp", "aao"]]  # .rolling(5).mean().dropna()
 
 axs[1].plot(aux["eof"], label="EOF " + GROUP1 + " vs " + GROUP2, color="r")
 axs[1].plot(aux["dp"], label="DP " + GROUP1 + " vs " + GROUP2, color="b")
@@ -668,11 +662,12 @@ axs[1].set_ylabel("Fairness Metrics")
 axs[1].set_xlabel("Regularization parameter")
 plt.savefig("images/compassHyperGaussian.png")
 plt.show()
-# In[35]:
+### Figure 3 #####
+##################
 fig, axs = plt.subplots(1, 2, sharex=True)
 
 fig.suptitle("Smoothing regularization target encoding")
-aux = smooth1[["auc_tot", "auc_White", "auc_Asian"]].rolling(5).mean().dropna()
+aux = smooth1[["auc_tot", "auc_micro"]]  # .rolling(5).mean().dropna()
 
 
 for col in aux.columns:
@@ -683,9 +678,10 @@ axs[0].set_title("Model performance")
 axs[0].set_ylabel("AUC")
 axs[0].set_xlabel("Regularization parameter")
 
-aux = smooth1[["dp"]].rolling(5).mean().dropna()
-
-axs[1].plot(aux["dp"], label=GROUP1 + " vs " + GROUP2, color="r")
+aux = smooth1[["dp", "eof", "aao"]]  # .rolling(5).mean().dropna()
+axs[1].plot(aux["eof"], label="EOF " + GROUP1 + " vs " + GROUP2, color="r")
+axs[1].plot(aux["dp"], label="DP " + GROUP1 + " vs " + GROUP2, color="b")
+axs[1].plot(aux["aao"], label="AAO" + GROUP1 + " vs " + GROUP2, color="g")
 
 axs[1].legend()
 axs[1].set_title("Fairness Metrics")
@@ -696,8 +692,7 @@ plt.show()
 
 
 # %%
-##################
-### Figure 3 #####
+### Figure 4 #####
 ##################
 """
 3 Models are trained with different regularization parameters
