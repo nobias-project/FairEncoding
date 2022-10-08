@@ -224,7 +224,6 @@ def metric_calculator(
     col: str,
     reference_group: str,
     compared_group: str = "All",
-    normalize: bool = True,
 ):
     """
     model: model to be used
