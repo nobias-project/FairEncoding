@@ -665,7 +665,7 @@ axs[1].plot(aux["aao"], label="AAO" + GROUP1 + " vs " + GROUP2, color="g")
 
 axs[1].legend()
 axs[1].set_title("Fairness Metric")
-axs[1].set_ylabel("Equal opportunity fairness (TPR)")
+axs[1].set_ylabel("Fairness Metrics")
 axs[1].set_xlabel("Regularization parameter")
 plt.savefig("images/compassHyperGaussian.png")
 plt.show()
