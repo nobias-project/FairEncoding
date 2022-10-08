@@ -279,17 +279,17 @@ def metric_calculator(
         ## Demographic Parity
         dp = wasserstein_distance(p1, p2)
         ## Average Absolute Odds
-        aao = np.abs(tpr1 - fpr1) + np.abs(
-            tpr2 - fpr2
+        aao = (
+            np.abs(tpr1 - fpr1) + np.abs(tpr2 - fpr2) - 1
         )  # The sum of the absolute differencesbetween the true positive rate and the false positive rates of the unprivileged group and thetrue positive rate and the false positive rates of the privileged group. For a fair model/data thismetric needs to be closer to zero
         eof_sum.append(eof)
         dp_sum.append(dp)
         aao_sum.append(aao)
 
     return (
-        np.abs(eof_sum).mean(),
-        np.absolute(dp_sum).mean(),
-        np.absolute(aao_sum).mean(),
+        np.abs(eof_sum).sum(),
+        np.absolute(dp_sum).sum(),
+        np.absolute(aao_sum).sum(),
     )
 
 
@@ -415,10 +415,17 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
     # Results formatting
     res = pd.DataFrame(index=param)
     res["fairness_metric"] = metrica
+    ## Decompress fairness metrics
     res["eof"] = res["fairness_metric"].apply(lambda x: x[0])
     res["dp"] = res["fairness_metric"].apply(lambda x: x[1])
     res["aao"] = res["fairness_metric"].apply(lambda x: x[2])
     res = res.drop(columns="fairness_metric")
+
+    ## Scale metrics for viz purposes
+    sc = MinMaxScaler()
+    # res["eof"] = res["eof"] / res["eof"].mean()
+    # res["dp"] = res["dp"] / res["dp"].mean()
+    # res["aao"] = res["aao"] / res["aao"].mean()
     res["auc_tot"] = auc_tot
     res["auc_" + GROUP1] = auc[GROUP1]
     try:
