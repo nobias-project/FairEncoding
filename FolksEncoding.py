@@ -20,6 +20,8 @@ rcParams["ytick.labelsize"] = 12
 rcParams["figure.figsize"] = 16, 8
 import warnings
 
+warnings.filterwarnings("ignore")
+
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 
@@ -284,12 +286,11 @@ def metric_calculator(
         dp_sum.append(dp)
         aao_sum.append(aao)
 
-    if normalize:
-        if compared_group == "All":
-            eof_sum = MinMaxScaler().fit_transform(np.array(eof_sum).reshape(-1, 1))
-            dp_sum = MinMaxScaler().fit_transform(np.array(dp_sum).reshape(-1, 1))
-            aao_sum = MinMaxScaler().fit_transform(np.array(aao_sum).reshape(-1, 1))
-    return np.abs(eof_sum).sum(), np.absolute(dp_sum).sum(), np.absolute(aao_sum).sum()
+    return (
+        np.abs(eof_sum).mean(),
+        np.absolute(dp_sum).mean(),
+        np.absolute(aao_sum).mean(),
+    )
 
 
 # %%
@@ -302,7 +303,7 @@ metric_calculator(
     modelo=m,
     data=X,
     truth=y,
-    col=COL,
+    col="group",
     reference_group="White",
     compared_group="All",
     normalize=True,
