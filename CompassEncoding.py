@@ -62,15 +62,12 @@ from folktables import (
 # %%
 # Download and Load data
 df = pd.read_csv("data/compas-scores-raw.csv")
-
 # Target modfication
 df["Score"] = df["DecileScore"]
 df.loc[df["DecileScore"] > 4, "Score"] = 1
 df.loc[df["DecileScore"] <= 4, "Score"] = 0
-
 # Categorical features cleaning
 df.loc[df["Ethnic_Code_Text"] == "African-Am", "Ethnic_Code_Text"] = "African-American"
-
 # Cols that are going to be dropped
 cols = [
     "Person_ID",
@@ -84,11 +81,11 @@ cols = [
     "Screening_Date",
     "RecSupervisionLevel",
     # "Agency_Text",
-    # "AssessmentReason",
+    "AssessmentReason",
     "Language",
     "Scale_ID",
-    # "IsCompleted",
-    # "IsDeleted",
+    "IsCompleted",
+    "IsDeleted",
     # "AssessmentType",
     "DecileScore",
     "RecSupervisionLevelText",
@@ -103,8 +100,22 @@ df = df.drop(columns=cols)
 # Some encoding of other categorical feats
 df["Sex_Code_Text"] = pd.get_dummies(df["Sex_Code_Text"], prefix="Sex")["Sex_Male"]
 df["ScaleSet"] = pd.get_dummies(df["ScaleSet"])["Risk and Prescreen"]
+df = df.join(pd.get_dummies(df["DisplayText"]))
+df = df.join(pd.get_dummies(df["AssessmentType"]))
+
+## Drop categories with few values
+df = df[(df["Ethnic_Code_Text"] != "Arabic") & (df["Ethnic_Code_Text"] != "Oriental")]
+
+df = df.rename(columns={"Sex_Code_Text": "Sex"})
+df = df.rename(columns={"Ethnic_Code_Text": "Ethnic"})
 # %%
-# Auxiliary data for plottign
+# Split data
+X = df.drop(columns="Score")
+
+y = df[["Score"]]
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
+# %%
+# Auxiliary data for plotting
 filter_value = 323
 aux = pd.DataFrame(X["Ethnic"].value_counts())
 aux2 = pd.DataFrame(
@@ -124,34 +135,13 @@ colors = sns.color_palette("pastel")[0 : aux.shape[0]]
 plt.figure()
 explode = (0.05,) * aux.shape[0]
 plt.pie(
-    aux.group.values,
+    aux.Ethnic.values,
     labels=aux.index,
-    autopct=lambda pct: func(pct, aux.group.values),
+    autopct=lambda pct: func(pct, aux.Ethnic.values),
     shadow=True,
     explode=explode,
 )
 plt.show()
-
-# %%
-# Split data
-X = df.drop(columns="Score")
-X.columns = [
-    "Agency_Text",
-    "Sex",
-    "Ethnic",
-    "ScaleSet",
-    "AssessmentReason",
-    "LegalStatus",
-    "CustodyStatus",
-    "MaritalStatus",
-    "DisplayText",
-    "AssessmentType",
-    "IsCompleted",
-    "IsDeleted",
-]
-y = df[["Score"]]
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
-
 # %%
 # Auxiliary functions
 def fit_predict(modelo, enc, data, target, test):
@@ -305,8 +295,8 @@ def metric_calculator(
         ## Demographic Parity
         dp = wasserstein_distance(p1, p2)
         ## Average Absolute Odds
-        aao = (
-            np.abs(tpr1 - fpr1) + np.abs(tpr2 - fpr2) - 0.5
+        aao = np.abs(tpr1 - fpr1) + np.abs(
+            tpr2 - fpr2
         )  # The sum of the absolute differencesbetween the true positive rate and the false positive rates of the unprivileged group and thetrue positive rate and the false positive rates of the privileged group. For a fair model/data thismetric needs to be closer to zero
         eof_sum.append(eof)
         dp_sum.append(dp)
@@ -326,8 +316,8 @@ m.fit(X_tr, y_tr)
 roc_auc_score(y_te, m.predict_proba(X_te)[:, 1])
 # %%
 res = {}
-for cat, num in X["group"].value_counts().items():
-    COL = "group"
+for cat, num in X["Ethnic"].value_counts().items():
+    COL = "Ethnic"
     REFERENCE_GROUP = "Asian"
     GROUP2 = cat
     res[cat] = [
@@ -410,11 +400,14 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
         elif enc == "catboost":
             encoder = CatBoostEncoder(a=1, sigma=m, cols=cols_enc)
         elif enc == "drop":
-            encoder = columnDropperTransformer(columns=drop_cols)
+            encoder = Pipeline(
+                [
+                    ("drop", columnDropperTransformer(columns=cols_enc)),
+                ]
+            )
 
         pipe = Pipeline([("encoder", encoder), ("model", model)])
         pipe.fit(X_tr, y_tr)
-
         metrica.append(
             metric_calculator(
                 modelo=pipe,
@@ -452,8 +445,8 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
 
 # %%
 # Experiment parameters
-COL = "group"
-GROUP1 = "White"
+COL = "Ethnic"
+GROUP1 = "Caucasian"
 GROUP2 = "All"
 # Lenght of the linspace
 POINTS = 10
@@ -1605,5 +1598,3 @@ axs[1, 1].scatter(
 
 fig.savefig("images/enc2models.png")
 fig.show()
-
-# %%
