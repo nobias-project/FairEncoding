@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib import rcParams
+import shap
 
 plt.rcParams["figure.figsize"] = [10, 5]
 plt.style.use("seaborn-whitegrid")
@@ -71,7 +72,9 @@ ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
 ## Scale & Conver to DF
 ca_features = StandardScaler().fit_transform(ca_features)
 ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features)
-ca_features = ca_features.drop(columns=["RAC1P"])
+ca_features = ca_features.drop(
+    columns=["RAC1P", "OCCP", "WKHP", "AGEP", "SCHL", "RELP"]
+)
 ca_features["group"] = ca_group
 ca_features["label"] = ca_labels
 ## Encode race back as str
@@ -153,7 +156,7 @@ def auc_group(model, data, y_true, dicc, group: str = "", min_samples: int = 10)
     return dicc
 
 
-def explain(xgb: bool = True):
+def explain(xgb: bool = True, X_tr=X_tr, X_te=X_te, y_tr=y_tr, y_te=y_te):
     """
     Provide a SHAP explanation by fitting MEstimate and GBDT
     """
@@ -288,6 +291,8 @@ def metric_calculator(
     )
 
 
+# %%
+explain()
 # %%
 # Train model
 m = Pipeline([("enc", CatBoostEncoder(sigma=0.5)), ("model", LogisticRegression())])
@@ -679,6 +684,7 @@ plt.show()
 
 
 # %%
+STOP
 ### Figure 4 #####
 ##################
 """

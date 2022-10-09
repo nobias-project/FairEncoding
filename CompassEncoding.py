@@ -96,7 +96,8 @@ cols = [
     # "ScaleSet",
     # "LegalStatus",
     # "CustodyStatus",
-    "RawScore", "ScoreText",
+    "RawScore",
+    "ScoreText",
 ]
 df = df.drop(columns=cols)
 # Some encoding of other categorical feats
@@ -133,7 +134,7 @@ plt.show()
 
 # %%
 # Split data
-X = df.drop(columns='Score')
+X = df.drop(columns="Score")
 X.columns = [
     "Agency_Text",
     "Sex",
