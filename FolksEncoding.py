@@ -430,7 +430,7 @@ COL = "group"
 GROUP1 = "White"
 GROUP2 = "All"
 # Lenght of the linspace
-POINTS = 10
+POINTS = 50
 # %%
 ## LR Experiment
 no_encoding1 = fair_encoder(
@@ -621,7 +621,7 @@ axs[1].scatter(
     s=100,
     label="No Encoding AAO",
 )
-fig.savefig("images/encTheory.png")
+fig.savefig("images/encTheoryFolks.pdf")
 fig.show()
 # %%
 ### Figure 2 #####
@@ -652,7 +652,7 @@ axs[1].legend()
 axs[1].set_title("Fairness Metric")
 axs[1].set_ylabel("Fairness Metrics")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig("images/compassHyperGaussian.png")
+plt.savefig("images/compassHyperGaussianfolks.pdf", bbox_inches="tight")
 plt.show()
 ### Figure 3 #####
 ##################
@@ -679,12 +679,11 @@ axs[1].legend()
 axs[1].set_title("Fairness Metrics")
 axs[1].set_ylabel("")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig("images/compassHyperSmoothing.png")
+plt.savefig("images/compassHyperSmoothingfolks.pdf", bbox_inches="tight")
 plt.show()
 
 
 # %%
-STOP
 ### Figure 4 #####
 ##################
 """
@@ -1236,7 +1235,7 @@ axs[2, 1].scatter(
     label="No Encoding AAO",
 )
 
-fig.savefig("images/encTheoryFull.png")
+fig.savefig("images/encTheoryFullfolks.pdf", bbox_inches="tight")
 fig.show()
 
 # %%
@@ -1578,7 +1577,7 @@ axs[1, 1].scatter(
     label="No Encoding AAO",
 )
 
-fig.savefig("images/enc2models.png")
+fig.savefig("images/enc2modelsfolks.pdf", bbox_inches="tight")
 fig.show()
 
 # %%
