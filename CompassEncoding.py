@@ -449,7 +449,7 @@ COL = "Ethnic"
 GROUP1 = "Caucasian"
 GROUP2 = "All"
 # Lenght of the linspace
-POINTS = 10
+POINTS = 50
 # %%
 ## LR Experiment
 no_encoding1 = fair_encoder(
@@ -671,7 +671,7 @@ axs[1].legend()
 axs[1].set_title("Fairness Metric")
 axs[1].set_ylabel("Fairness Metrics")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig("images/compassHyperGaussian.png")
+plt.savefig("images/compassHyperGaussian.pdf", bbox_inches="tight")
 plt.show()
 ### Figure 3 #####
 ##################
@@ -698,7 +698,7 @@ axs[1].legend()
 axs[1].set_title("Fairness Metrics")
 axs[1].set_ylabel("")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig("images/compassHyperSmoothing.png")
+plt.savefig("images/compassHyperSmoothing.pdf", bbox_inches="tight")
 plt.show()
 
 
@@ -1596,5 +1596,8 @@ axs[1, 1].scatter(
     label="No Encoding AAO",
 )
 
-fig.savefig("images/enc2models.png")
+fig.savefig("images/enc2modelsCompass.pdf", bbox_inches="tight")
+
 fig.show()
+
+# %%
