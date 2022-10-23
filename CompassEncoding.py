@@ -640,7 +640,7 @@ axs[1].scatter(
     s=100,
     label="No Encoding AAO",
 )
-fig.savefig("images/encTheory.png")
+fig.savefig("images/encTheory.pdf", bbox_inches="tight")
 fig.show()
 # %%
 ### Figure 2 #####
@@ -1254,7 +1254,7 @@ axs[2, 1].scatter(
     label="No Encoding AAO",
 )
 
-fig.savefig("images/encTheoryFull.png")
+fig.savefig("images/encTheoryFull.pdf", bbox_inches="tight")
 fig.show()
 
 # %%
