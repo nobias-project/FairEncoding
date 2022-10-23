@@ -27,7 +27,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 
 from sklearn.metrics import roc_auc_score, confusion_matrix
-from sklearn.neural_network import MLPClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from scipy.stats import wasserstein_distance
@@ -61,68 +61,43 @@ from folktables import (
 
 # %%
 # Download and Load data
-df = pd.read_csv("data/compas-scores-raw.csv")
-# Target modfication
-df["Score"] = df["DecileScore"]
-df.loc[df["DecileScore"] > 4, "Score"] = 1
-df.loc[df["DecileScore"] <= 4, "Score"] = 0
-# Categorical features cleaning
-df.loc[df["Ethnic_Code_Text"] == "African-Am", "Ethnic_Code_Text"] = "African-American"
-# Cols that are going to be dropped
-cols = [
-    "Person_ID",
-    "AssessmentID",
-    "Case_ID",
-    "LastName",
-    "FirstName",
-    "MiddleName",
-    "DateOfBirth",
-    "ScaleSet_ID",
-    "Screening_Date",
-    "RecSupervisionLevel",
-    # "Agency_Text",
-    "AssessmentReason",
-    "Language",
-    "Scale_ID",
-    "IsCompleted",
-    "IsDeleted",
-    # "AssessmentType",
-    "DecileScore",
-    "RecSupervisionLevelText",
-    # "DisplayText",
-    # "ScaleSet",
-    # "LegalStatus",
-    # "CustodyStatus",
-    "RawScore",
-    "ScoreText",
-]
-df = df.drop(columns=cols)
-# Some encoding of other categorical feats
-df["Sex_Code_Text"] = pd.get_dummies(df["Sex_Code_Text"], prefix="Sex")["Sex_Male"]
-df["ScaleSet"] = pd.get_dummies(df["ScaleSet"])["Risk and Prescreen"]
-df = df.join(pd.get_dummies(df["DisplayText"]))
-df = df.join(pd.get_dummies(df["AssessmentType"]))
+data_source = ACSDataSource(survey_year="2014", horizon="1-Year", survey="person")
+try:
+    ca_data = data_source.get_data(states=["CA"], download=False)
+except:
+    ca_data = data_source.get_data(states=["CA"], download=True)
+ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
 
-## Drop categories with few values
-df = df[(df["Ethnic_Code_Text"] != "Arabic") & (df["Ethnic_Code_Text"] != "Oriental")]
-
-df = df.rename(columns={"Sex_Code_Text": "Sex"})
-df = df.rename(columns={"Ethnic_Code_Text": "Ethnic"})
-# %%
-# Split data
-X = df.drop(columns="Score")
-
-y = df[["Score"]]
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
-# %%
-# Auxiliary data for plotting
-filter_value = 323
-aux = pd.DataFrame(X["Ethnic"].value_counts())
-aux2 = pd.DataFrame(
-    data={"Ethnic": aux[aux.Ethnic < filter_value].sum()[0]}, index=["Minor Groups"]
+# Preprocesssing
+## Scale & Conver to DF
+ca_features = StandardScaler().fit_transform(ca_features)
+ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features)
+ca_features = ca_features.drop(
+    columns=["RAC1P", "OCCP", "WKHP", "AGEP", "SCHL", "RELP"]
 )
-aux = aux.append(aux2)
-aux = aux[aux.Ethnic >= filter_value]
+ca_features["group"] = ca_group
+ca_features["label"] = ca_labels
+## Encode race back as str
+race = {
+    1: "White",
+    2: "Black",
+    3: "Native",
+    4: "Alaska",
+    5: "AmericanIndian",
+    6: "Asian",
+    7: "Hawaiian",
+    8: "Other",
+}
+ca_features["group"] = ca_features["group"].map(race)
+# Analysis
+print(ca_features.groupby("group").label.mean())
+print(ca_features.groupby("group").label.count())
+# %%
+# Remove groups that have small statistical mass
+# ca_features = ca_features[(ca_features["group"] == 1) | (ca_features["group"] == 2)]
+
+# Auxiliary data for plottign
+aux = pd.DataFrame(ca_features["group"].value_counts())
 
 
 def func(pct, allvals):
@@ -135,13 +110,20 @@ colors = sns.color_palette("pastel")[0 : aux.shape[0]]
 plt.figure()
 explode = (0.05,) * aux.shape[0]
 plt.pie(
-    aux.Ethnic.values,
+    aux.group.values,
     labels=aux.index,
-    autopct=lambda pct: func(pct, aux.Ethnic.values),
+    autopct=lambda pct: func(pct, aux.group.values),
     shadow=True,
     explode=explode,
 )
 plt.show()
+
+# %%
+# Split data
+X = ca_features.drop(columns=["label"])
+y = ca_features[["label"]]
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
+
 # %%
 # Auxiliary functions
 def fit_predict(modelo, enc, data, target, test):
@@ -295,8 +277,8 @@ def metric_calculator(
         ## Demographic Parity
         dp = wasserstein_distance(p1, p2)
         ## Average Absolute Odds
-        aao = np.abs(tpr1 - fpr1) + np.abs(
-            tpr2 - fpr2
+        aao = (
+            np.abs(tpr1 - fpr1) + np.abs(tpr2 - fpr2) - 1
         )  # The sum of the absolute differencesbetween the true positive rate and the false positive rates of the unprivileged group and thetrue positive rate and the false positive rates of the privileged group. For a fair model/data thismetric needs to be closer to zero
         eof_sum.append(eof)
         dp_sum.append(dp)
@@ -310,14 +292,16 @@ def metric_calculator(
 
 
 # %%
+explain()
+# %%
 # Train model
 m = Pipeline([("enc", CatBoostEncoder(sigma=0.5)), ("model", LogisticRegression())])
 m.fit(X_tr, y_tr)
 roc_auc_score(y_te, m.predict_proba(X_te)[:, 1])
 # %%
 res = {}
-for cat, num in X["Ethnic"].value_counts().items():
-    COL = "Ethnic"
+for cat, num in X["group"].value_counts().items():
+    COL = "group"
     REFERENCE_GROUP = "Asian"
     GROUP2 = cat
     res[cat] = [
@@ -400,14 +384,11 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
         elif enc == "catboost":
             encoder = CatBoostEncoder(a=1, sigma=m, cols=cols_enc)
         elif enc == "drop":
-            encoder = Pipeline(
-                [
-                    ("drop", columnDropperTransformer(columns=cols_enc)),
-                ]
-            )
+            encoder = columnDropperTransformer(columns=drop_cols)
 
         pipe = Pipeline([("encoder", encoder), ("model", model)])
         pipe.fit(X_tr, y_tr)
+
         metrica.append(
             metric_calculator(
                 modelo=pipe,
@@ -445,8 +426,8 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
 
 # %%
 # Experiment parameters
-COL = "Ethnic"
-GROUP1 = "Caucasian"
+COL = "group"
+GROUP1 = "White"
 GROUP2 = "All"
 # Lenght of the linspace
 POINTS = 50
@@ -640,7 +621,7 @@ axs[1].scatter(
     s=100,
     label="No Encoding AAO",
 )
-fig.savefig("images/encTheory.png")
+fig.savefig("images/encTheoryFolks.pdf")
 fig.show()
 # %%
 ### Figure 2 #####
@@ -671,7 +652,7 @@ axs[1].legend()
 axs[1].set_title("Fairness Metric")
 axs[1].set_ylabel("Fairness Metrics")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig("images/compassHyperGaussian.pdf", bbox_inches="tight")
+plt.savefig("images/compassHyperGaussianfolks.pdf", bbox_inches="tight")
 plt.show()
 ### Figure 3 #####
 ##################
@@ -698,7 +679,7 @@ axs[1].legend()
 axs[1].set_title("Fairness Metrics")
 axs[1].set_ylabel("")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig("images/compassHyperSmoothing.pdf", bbox_inches="tight")
+plt.savefig("images/compassHyperSmoothingfolks.pdf", bbox_inches="tight")
 plt.show()
 
 
@@ -717,19 +698,19 @@ plt.show()
 # PARAM = np.linspace(0, 100, 50)
 # smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM)
 ## DT
-one_hot2 = fair_encoder(model=MLPClassifier(), enc="ohe", param=[0])
+one_hot2 = fair_encoder(model=DecisionTreeClassifier(max_depth=5), enc="ohe", param=[0])
 no_encoding2 = fair_encoder(
-    model=MLPClassifier(), enc="drop", drop_cols=COL, param=[0]
+    model=DecisionTreeClassifier(max_depth=5), enc="drop", drop_cols=COL, param=[0]
 )
 PARAM = np.linspace(0, 1, POINTS)
 gaus2 = fair_encoder(
-    model=MLPClassifier(),
+    model=DecisionTreeClassifier(max_depth=5),
     enc="catboost",
     param=PARAM,
 )
 PARAM = np.linspace(0, 100_000, POINTS)
 smooth2 = fair_encoder(
-    model=MLPClassifier(),
+    model=DecisionTreeClassifier(max_depth=5),
     enc="mestimate",
     param=PARAM,
 )
@@ -922,7 +903,7 @@ axs[0, 1].scatter(
 )
 ######### DT #########
 #######################
-axs[1, 0].set_title("Neural Net + Gaussian Noise")
+axs[1, 0].set_title("Decision Tree + Gaussian Noise")
 ### Fairness metrics plotting
 axs[1, 0].scatter(
     gaus2["auc_tot"].values,
@@ -1005,7 +986,7 @@ axs[1, 0].legend()
 axs[1, 0].set(xlabel="AUC")
 axs[1, 1].set(xlabel="AUC")
 axs[1, 0].set(ylabel="Fairness metrics")
-axs[1, 1].set_title("Neural Net + Smoothing Regularizer")
+axs[1, 1].set_title("Decision Tree + Smoothing Regularizer")
 leg = axs[1, 0].get_legend()
 leg.legendHandles[0].set_color("red")
 leg.legendHandles[1].set_color("blue")
@@ -1254,7 +1235,7 @@ axs[2, 1].scatter(
     label="No Encoding AAO",
 )
 
-fig.savefig("images/encTheoryFull.png")
+fig.savefig("images/encTheoryFullfolks.pdf", bbox_inches="tight")
 fig.show()
 
 # %%
@@ -1596,8 +1577,7 @@ axs[1, 1].scatter(
     label="No Encoding AAO",
 )
 
-fig.savefig("images/enc2modelsCompass.pdf", bbox_inches="tight")
-
+fig.savefig("images/enc2modelsfolks.pdf", bbox_inches="tight")
 fig.show()
 
 # %%
