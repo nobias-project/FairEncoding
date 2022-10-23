@@ -718,9 +718,7 @@ plt.show()
 # smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM)
 ## DT
 one_hot2 = fair_encoder(model=MLPClassifier(), enc="ohe", param=[0])
-no_encoding2 = fair_encoder(
-    model=MLPClassifier(), enc="drop", drop_cols=COL, param=[0]
-)
+no_encoding2 = fair_encoder(model=MLPClassifier(), enc="drop", drop_cols=COL, param=[0])
 PARAM = np.linspace(0, 1, POINTS)
 gaus2 = fair_encoder(
     model=MLPClassifier(),
