@@ -28,6 +28,7 @@ from sklearn.linear_model import LogisticRegression
 
 from sklearn.metrics import roc_auc_score, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from scipy.stats import wasserstein_distance
@@ -698,19 +699,17 @@ plt.show()
 # PARAM = np.linspace(0, 100, 50)
 # smooth1 = fair_encoder(model=LogisticRegression(), enc="mestimate", param=PARAM)
 ## DT
-one_hot2 = fair_encoder(model=DecisionTreeClassifier(max_depth=5), enc="ohe", param=[0])
-no_encoding2 = fair_encoder(
-    model=DecisionTreeClassifier(max_depth=5), enc="drop", drop_cols=COL, param=[0]
-)
+one_hot2 = fair_encoder(model=MLPClassifier(), enc="ohe", param=[0])
+no_encoding2 = fair_encoder(model=MLPClassifier(), enc="drop", drop_cols=COL, param=[0])
 PARAM = np.linspace(0, 1, POINTS)
 gaus2 = fair_encoder(
-    model=DecisionTreeClassifier(max_depth=5),
+    model=MLPClassifier(),
     enc="catboost",
     param=PARAM,
 )
 PARAM = np.linspace(0, 100_000, POINTS)
 smooth2 = fair_encoder(
-    model=DecisionTreeClassifier(max_depth=5),
+    model=MLPClassifier(),
     enc="mestimate",
     param=PARAM,
 )
