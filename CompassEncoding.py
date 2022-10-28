@@ -49,6 +49,7 @@ from fairtools.utils import (
     scale_output,
     columnDropperTransformer,
 )
+
 # %%
 # Download and Load data
 df = pd.read_csv("data/compas-scores-raw.csv")
