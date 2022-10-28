@@ -49,16 +49,6 @@ from fairtools.utils import (
     scale_output,
     columnDropperTransformer,
 )
-
-from folktables import (
-    ACSDataSource,
-    ACSIncome,
-    ACSEmployment,
-    ACSMobility,
-    ACSPublicCoverage,
-    ACSTravelTime,
-)
-
 # %%
 # Download and Load data
 df = pd.read_csv("data/compas-scores-raw.csv")
