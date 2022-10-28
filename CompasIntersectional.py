@@ -14,6 +14,7 @@ from matplotlib import rcParams
 import shap
 
 plt.rcParams["figure.figsize"] = [10, 5]
+plt.rcParams.update({"font.size": 18})
 plt.style.use("seaborn-whitegrid")
 rcParams["axes.labelsize"] = 14
 rcParams["xtick.labelsize"] = 12
