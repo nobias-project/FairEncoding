@@ -474,7 +474,7 @@ rects3 = ax.bar(
 
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
-ax.set_ylabel("Fairness Metric")
+ax.set_ylabel("Equal Opportunity Fairness Metric")
 ax.set_title("Max Fairness violation when using intersectional groups")
 ax.set_xticks(x, labels)
 ax.legend()
