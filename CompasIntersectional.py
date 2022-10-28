@@ -442,31 +442,36 @@ x = np.arange(len(labels))  # the label locations
 width = 0.25  # the width of the bars
 
 fig, ax = plt.subplots()
-ax.axhline(y=non_enc_int, linestyle="-", label="Non Encoding Inter", color="lightcoral")
-ax.axhline(y=non_enc, linestyle="-", label="Non Encoder(Ethnic) ", color="cornflowerblue")
+ax.axhline(
+    y=non_enc_int, linestyle="-", label="Non Encoding(Inter)", color="lightcoral"
+)
+ax.axhline(
+    y=non_enc, linestyle="-", label="Non Encoder(Ethnic) ", color="cornflowerblue"
+)
 ax.axhline(y=non_enc_mar, linestyle="-", label="Non Encoder(Marital)", color="k")
 rects1 = ax.bar(
-    x ,
-    non,
-    width,
-    label="Non Intersectional",
-    color="cornflowerblue",
-    hatch=r"//",
-)
-rects2 = ax.bar(
-    x + width ,
-    inter,
-    width,
-    label="Intersectional",
-    color="lightcoral",
-)
-rects3 = ax.bar(
-    x + width*2,
+    x,
     mar,
     width,
     label="Marital",
     color="k",
 )
+rects2 = ax.bar(
+    x + width,
+    non,
+    width,
+    label="Ethnic",
+    color="cornflowerblue",
+    hatch=r"//",
+)
+rects3 = ax.bar(
+    x + 2 * width,
+    inter,
+    width,
+    label="Intersectional",
+    color="lightcoral",
+)
+
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
 ax.set_ylabel("Fairness Metric")
