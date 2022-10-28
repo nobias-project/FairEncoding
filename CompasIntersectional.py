@@ -351,13 +351,15 @@ encoder = [
 ]
 dfs = []
 for enc in encoder:
-    for el in [True, False]:
+    for el in [True, False, "Other"]:
         intersect = el
 
         if intersect == True:
             X["EthnicMarital"] = df["EthnicMarital"]
-        else:
+        elif intersect == False:
             X["EthnicMarital"] = df["Ethnic"]
+        else:
+            X["EthnicMarital"] = df["MaritalStatus"]
 
         X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
 
@@ -372,8 +374,10 @@ for enc in encoder:
             COL = "EthnicMarital"
             if intersect == True:
                 REFERENCE_GROUP = "CaucasianSingle"
-            else:
+            elif intersect == False:
                 REFERENCE_GROUP = "Caucasian"
+            else:
+                REFERENCE_GROUP = "Single"
             GROUP2 = cat
 
             res[cat] = [
@@ -403,18 +407,25 @@ for enc in encoder:
 ## Plot the results
 non_enc_int = dfs[0].eof.max()
 non_enc = dfs[1].eof.max()
+non_enc_mar = dfs[2].eof.max()
 
-ohe_int = dfs[2].eof.max()
-ohe_non = dfs[3].eof.max()
+ohe_int = dfs[3].eof.max()
+ohe_non = dfs[4].eof.max()
+ohe_mar = dfs[5].eof.max()
 
-te_int = dfs[4].eof.max()
-te_non = dfs[5].eof.max()
+te_int = dfs[6].eof.max()
+te_non = dfs[7].eof.max()
+te_mar = dfs[8].eof.max()
 
-teg_int = dfs[6].eof.max()
-teg_non = dfs[7].eof.max()
 
-tes_int = dfs[8].eof.max()
-tes_non = dfs[9].eof.max()
+teg_int = dfs[9].eof.max()
+teg_non = dfs[10].eof.max()
+teg_mar = dfs[11].eof.max()
+
+
+tes_int = dfs[12].eof.max()
+tes_non = dfs[13].eof.max()
+tes_mar = dfs[14].eof.max()
 
 labels = [
     "One Hot Encoding",
@@ -423,17 +434,19 @@ labels = [
     "MEstimateEncoder(Smoothing)",
 ]
 non = np.round([ohe_non, te_non, teg_non, tes_non], decimals=2)
+mar = np.round([ohe_mar, te_mar, teg_mar, tes_mar], decimals=2)
 inter = np.round([ohe_int, te_int, teg_int, tes_int], decimals=2)
 
 
 x = np.arange(len(labels))  # the label locations
-width = 0.35  # the width of the bars
+width = 0.25  # the width of the bars
 
 fig, ax = plt.subplots()
 ax.axhline(y=non_enc_int, linestyle="-", label="Non Encoding Inter", color="lightcoral")
-ax.axhline(y=non_enc, linestyle="-", label="Non Encoder", color="cornflowerblue")
+ax.axhline(y=non_enc, linestyle="-", label="Non Encoder(Ethnic) ", color="cornflowerblue")
+ax.axhline(y=non_enc_mar, linestyle="-", label="Non Encoder(Marital)", color="k")
 rects1 = ax.bar(
-    x - width / 2,
+    x ,
     non,
     width,
     label="Non Intersectional",
@@ -441,11 +454,18 @@ rects1 = ax.bar(
     hatch=r"//",
 )
 rects2 = ax.bar(
-    x + width / 2,
+    x + width ,
     inter,
     width,
     label="Intersectional",
     color="lightcoral",
+)
+rects3 = ax.bar(
+    x + width*2,
+    mar,
+    width,
+    label="Marital",
+    color="k",
 )
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
