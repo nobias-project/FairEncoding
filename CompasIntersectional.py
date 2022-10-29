@@ -346,7 +346,7 @@ y = df[["Score"]]
 encoder = [
     columnDropperTransformer(columns="EthnicMarital"),
     OneHotEncoder(),
-    CatBoostEncoder(sigma=0),
+    CatBoostEncoder(sigma=0.05),
     CatBoostEncoder(sigma=0.99),
     MEstimateEncoder(m=100_000),
 ]
@@ -482,6 +482,7 @@ ax.legend()
 
 ax.bar_label(rects1, padding=3)
 ax.bar_label(rects2, padding=3)
+ax.bar_label(rects3, padding=3)
 
 fig.tight_layout()
 fig.savefig("images/compasInter.pdf", bbox_inches="tight")
