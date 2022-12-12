@@ -432,7 +432,7 @@ labels = [
     "One Hot Encoding",
     "Target Encoder(Unreg)",
     "Target Encoder(Gaussian)",
-    "MEstimateEncoder(Smoothing)",
+    "Target Encoder(Smoothing)",
 ]
 non = np.round([ohe_non, te_non, teg_non, tes_non], decimals=2)
 mar = np.round([ohe_mar, te_mar, teg_mar, tes_mar], decimals=2)
