@@ -671,9 +671,11 @@ fig, axs = plt.subplots(1, 2, sharex=True)
 fig.suptitle("Smoothing regularization target encoding")
 aux = smooth1.drop(columns=["dp", "aao", "eof"])  # .rolling(5).mean().dropna()
 
-
 for col in aux.columns:
-    axs[0].plot(aux[col], label=col)
+    # Remove this two plots
+    if col != "auc_tot":
+        if col != "auc_mic":
+            axs[0].plot(aux[col], label=col)
     # plt.fill_between(aux.index,(aux[col] - stand[col]),(aux[col] + stand[col]),# color="b",alpha=0.1,)
 axs[0].legend()
 axs[0].set_title("Model performance")
@@ -990,7 +992,6 @@ axs[1, 0].scatter(
 )
 
 ### Figure labels
-axs[1, 0].legend()
 axs[1, 0].set(xlabel="AUC")
 axs[1, 1].set(xlabel="AUC")
 axs[1, 0].set(ylabel="Fairness metrics")
@@ -1157,7 +1158,6 @@ axs[2, 0].scatter(
 )
 
 ### Figure labels
-axs[2, 0].legend()
 axs[2, 0].set(xlabel="AUC")
 axs[2, 1].set(xlabel="AUC")
 axs[2, 0].set(ylabel="Fairness metrics")
