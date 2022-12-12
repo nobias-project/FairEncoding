@@ -1,7 +1,6 @@
 # %%
 import pandas as pd
 import random
-import pdb
 
 random.seed(0)
 from collections import defaultdict
@@ -448,13 +447,13 @@ no_encoding1 = fair_encoder(
 )
 one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
-PARAM = np.linspace(0, 1, POINTS)
+PARAM = np.linspace(0, 1, POINTS) ** 0.2
 gaus1 = fair_encoder(
     model=LogisticRegression(),
     enc="catboost",
     param=PARAM,
 )
-PARAM = np.linspace(0, 100_000, POINTS)
+PARAM = np.linspace(0, 200_000, POINTS)
 smooth1 = fair_encoder(
     model=LogisticRegression(),
     enc="mestimate",
@@ -645,7 +644,11 @@ fig.suptitle("Gaussian regularization target encoding")
 aux = gaus1.drop(columns=["dp", "aao", "eof"])  # .rolling(5).mean().dropna()
 
 for col in aux.columns:
-    axs[0].plot(aux[col], label=col)
+    # Remove this two plots
+    if col != "auc_tot":
+        if col != "auc_mic":
+            if col != "auc_micro":
+                axs[0].plot(aux[col], label=col)
     # plt.fill_between(aux.index,(aux[col] - stand[col]),(aux[col] + stand[col]),# color="b",alpha=0.1,)
 axs[0].legend()
 axs[0].set_title("Model performance")
@@ -675,7 +678,8 @@ for col in aux.columns:
     # Remove this two plots
     if col != "auc_tot":
         if col != "auc_mic":
-            axs[0].plot(aux[col], label=col)
+            if col != "auc_micro":
+                axs[0].plot(aux[col], label=col)
     # plt.fill_between(aux.index,(aux[col] - stand[col]),(aux[col] + stand[col]),# color="b",alpha=0.1,)
 axs[0].legend()
 axs[0].set_title("Model performance")
@@ -712,13 +716,13 @@ plt.show()
 ## DT
 one_hot2 = fair_encoder(model=MLPClassifier(), enc="ohe", param=[0])
 no_encoding2 = fair_encoder(model=MLPClassifier(), enc="drop", drop_cols=COL, param=[0])
-PARAM = np.linspace(0, 1, POINTS)
+PARAM = np.linspace(0, 1, POINTS) ** 0.2
 gaus2 = fair_encoder(
     model=MLPClassifier(),
     enc="catboost",
     param=PARAM,
 )
-PARAM = np.linspace(0, 100_000, POINTS)
+PARAM = np.linspace(0, 200_000, POINTS)
 smooth2 = fair_encoder(
     model=MLPClassifier(),
     enc="mestimate",
@@ -727,13 +731,13 @@ smooth2 = fair_encoder(
 ## GBDT
 one_hot3 = fair_encoder(model=XGBClassifier(), enc="ohe", param=[0])
 no_encoding3 = fair_encoder(model=XGBClassifier(), enc="drop", drop_cols=COL, param=[0])
-PARAM = np.linspace(0, 1, POINTS)
+PARAM = np.linspace(0, 1, POINTS) ** 0.2
 gaus3 = fair_encoder(
     model=XGBClassifier(),
     enc="catboost",
     param=PARAM,
 )
-PARAM = np.linspace(0, 100_000, POINTS)
+PARAM = np.linspace(0, 200_000, POINTS)
 smooth3 = fair_encoder(
     model=XGBClassifier(),
     enc="mestimate",
