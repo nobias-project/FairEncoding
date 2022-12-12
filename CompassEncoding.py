@@ -452,13 +452,18 @@ POINTS = 50
 no_encoding1 = fair_encoder(model=LogisticRegression(), enc="drop", param=[0])
 one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
-PARAM1 = np.linspace(0, 5, POINTS)
+
+PARAM1 = np.concatenate(
+    (np.linspace(0, 1, 30), np.linspace(1, 2.5, POINTS - 30) ** 2), axis=0
+)
 gaus1 = fair_encoder(
     model=LogisticRegression(),
     enc="catboost",
     param=PARAM1,
 )
-PARAM2 = np.linspace(0, 500_000, POINTS)
+PARAM2 = np.concatenate(
+    (np.linspace(0, 10_000, 30), np.linspace(300, 1_000, POINTS - 30) ** 2), axis=0
+)
 smooth1 = fair_encoder(
     model=LogisticRegression(),
     enc="mestimate",
@@ -704,7 +709,7 @@ plt.savefig("images/compassHyperSmoothing.pdf", bbox_inches="tight")
 plt.show()
 # %%
 ## Heavy computation
-
+ñlk
 # %%
 ### Figure 4 #####
 ##################
