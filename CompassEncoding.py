@@ -447,6 +447,8 @@ GROUP1 = "Caucasian"
 GROUP2 = "All"
 # Lenght of the linspace
 POINTS = 50
+# Power for viz
+POWER = 0.5
 # %%
 ## LR Experiment
 no_encoding1 = fair_encoder(model=LogisticRegression(), enc="drop", param=[0])
@@ -462,7 +464,7 @@ gaus1 = fair_encoder(
     param=PARAM1,
 )
 PARAM2 = np.concatenate(
-    (np.linspace(0, 10_000, 30), np.linspace(300, 1_000, POINTS - 30) ** 2), axis=0
+    (np.linspace(0, 1_000, 30), np.linspace(30, 1_000, POINTS - 30) ** 2), axis=0
 )
 smooth1 = fair_encoder(
     model=LogisticRegression(),
@@ -482,7 +484,7 @@ axs[0].scatter(
     gaus1["auc_tot"].values,
     gaus1["eof"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -490,7 +492,7 @@ axs[0].scatter(
     gaus1["auc_tot"].values,
     gaus1["dp"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -498,7 +500,7 @@ axs[0].scatter(
     gaus1["auc_tot"].values,
     gaus1["aao"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -569,7 +571,7 @@ axs[1].scatter(
     smooth1["auc_tot"].values,
     smooth1["eof"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -577,7 +579,7 @@ axs[1].scatter(
     smooth1["auc_tot"].values,
     smooth1["dp"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -585,7 +587,7 @@ axs[1].scatter(
     smooth1["auc_tot"].values,
     smooth1["aao"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -709,7 +711,6 @@ plt.savefig("images/compassHyperSmoothing.pdf", bbox_inches="tight")
 plt.show()
 # %%
 ## Heavy computation
-ñlk
 # %%
 ### Figure 4 #####
 ##################
@@ -768,7 +769,7 @@ axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["eof"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -776,7 +777,7 @@ axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["dp"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -784,7 +785,7 @@ axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["aao"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -855,7 +856,7 @@ axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["eof"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -863,7 +864,7 @@ axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["dp"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -871,7 +872,7 @@ axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["aao"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -934,7 +935,7 @@ axs[1, 0].scatter(
     gaus2["auc_tot"].values,
     gaus2["eof"].values,
     s=100,
-    c=gaus2.index.values,
+    c=gaus2.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -942,7 +943,7 @@ axs[1, 0].scatter(
     gaus2["auc_tot"].values,
     gaus2["dp"].values,
     s=100,
-    c=gaus2.index.values,
+    c=gaus2.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -950,7 +951,7 @@ axs[1, 0].scatter(
     gaus2["auc_tot"].values,
     gaus2["aao"].values,
     s=100,
-    c=gaus2.index.values,
+    c=gaus2.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -1020,7 +1021,7 @@ axs[1, 1].scatter(
     smooth2["auc_tot"].values,
     smooth2["eof"].values,
     s=100,
-    c=smooth2.index.values,
+    c=smooth2.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -1028,7 +1029,7 @@ axs[1, 1].scatter(
     smooth2["auc_tot"].values,
     smooth2["dp"].values,
     s=100,
-    c=smooth2.index.values,
+    c=smooth2.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -1036,7 +1037,7 @@ axs[1, 1].scatter(
     smooth2["auc_tot"].values,
     smooth2["aao"].values,
     s=100,
-    c=smooth2.index.values,
+    c=smooth2.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -1100,7 +1101,7 @@ axs[2, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["eof"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -1108,7 +1109,7 @@ axs[2, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["dp"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -1116,7 +1117,7 @@ axs[2, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["aao"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -1186,7 +1187,7 @@ axs[2, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["eof"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -1194,7 +1195,7 @@ axs[2, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["dp"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -1202,7 +1203,7 @@ axs[2, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["aao"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -1275,7 +1276,7 @@ axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["eof"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -1283,7 +1284,7 @@ axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["dp"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -1291,7 +1292,7 @@ axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["aao"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -1362,7 +1363,7 @@ axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["eof"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -1370,7 +1371,7 @@ axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["dp"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -1378,7 +1379,7 @@ axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["aao"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -1441,7 +1442,7 @@ axs[1, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["eof"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -1449,7 +1450,7 @@ axs[1, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["dp"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -1457,7 +1458,7 @@ axs[1, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["aao"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
@@ -1528,7 +1529,7 @@ axs[1, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["eof"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Reds",
     label="EOF Regularization Parameter (Darker=High)",
 )
@@ -1536,7 +1537,7 @@ axs[1, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["dp"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Blues",
     label="Demographic Parity",
 )
@@ -1544,7 +1545,7 @@ axs[1, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["aao"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Greens",
     label="Average Absolute Odds",
 )
