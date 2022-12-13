@@ -285,7 +285,7 @@ def metric_calculator(
         ## Demographic Parity
         dp = wasserstein_distance(p1, p2)
         ## Average Absolute Odds
-        aao = np.abs(tpr1 - fpr1) + np.abs(tpr2 - fpr2)
+        aao = np.abs(fpr1 - fpr2) + np.abs(fpr1 - fpr2)
         # The sum of the absolute difference sbetween the true positive rate and the false positive rates of the unprivileged group and thetrue positive rate and the false positive rates of the privileged group. For a fair model/data thismetric needs to be closer to zero
         eof_sum.append(eof)
         dp_sum.append(dp)
