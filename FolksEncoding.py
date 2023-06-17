@@ -19,6 +19,10 @@ rcParams["axes.labelsize"] = 14
 rcParams["xtick.labelsize"] = 12
 rcParams["ytick.labelsize"] = 12
 rcParams["figure.figsize"] = 16, 8
+# Increase font size
+sns.set(font_scale=1.5)
+rcParams["font.size"] = 22
+
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -67,15 +71,32 @@ try:
     ca_data = data_source.get_data(states=["CA"], download=False)
 except:
     ca_data = data_source.get_data(states=["CA"], download=True)
-ca_features, ca_labels, ca_group = ACSIncome.df_to_numpy(ca_data)
-
+ca_features, ca_labels, ca_group = ACSTravelTime.df_to_numpy(ca_data)
+# %%
 # Preprocesssing
 ## Scale & Conver to DF
 ca_features = StandardScaler().fit_transform(ca_features)
-ca_features = pd.DataFrame(ca_features, columns=ACSIncome.features)
+ca_features = pd.DataFrame(ca_features, columns=ACSTravelTime.features)
+"""
 ca_features = ca_features.drop(
-    columns=["RAC1P", "OCCP", "WKHP", "AGEP", "SCHL", "RELP"]
+    columns=[
+        "ST",
+        "NATIVITY",
+        "DEYE",
+        "DEAR",
+        "RAC1P",
+        "MIG",
+        "DREM",
+        "ESP",
+        "FER",
+        "SEX",
+        "PINCP",
+        "SCHL",
+        "ESR",
+        "DIS"
+    ]
 )
+"""
 ca_features["group"] = ca_group
 ca_features["label"] = ca_labels
 ## Encode race back as str
@@ -278,9 +299,8 @@ def metric_calculator(
         ## Demographic Parity
         dp = wasserstein_distance(p1, p2)
         ## Average Absolute Odds
-        aao = (
-            np.abs(tpr1 - fpr1) + np.abs(tpr2 - fpr2) - 1
-        )  # The sum of the absolute differencesbetween the true positive rate and the false positive rates of the unprivileged group and thetrue positive rate and the false positive rates of the privileged group. For a fair model/data thismetric needs to be closer to zero
+        aao = np.abs(fpr1 - fpr2) + np.abs(fpr1 - fpr2)
+        # The sum of the absolute difference sbetween the true positive rate and the false positive rates of the unprivileged group and thetrue positive rate and the false positive rates of the privileged group. For a fair model/data thismetric needs to be closer to zero
         eof_sum.append(eof)
         dp_sum.append(dp)
         aao_sum.append(aao)
@@ -291,8 +311,7 @@ def metric_calculator(
         np.absolute(aao_sum).sum(),
     )
 
-
-# %%
+# %%
 explain()
 # %%
 # Train model
@@ -366,30 +385,34 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
         enc in allowed_enc
     ), "Encoder not available or check for spelling mistakes: {}".format(allowed_enc)
 
-    cols_enc = set(X_tr.columns) - set(drop_cols)
-    cols_enc = X_tr.select_dtypes(include=["object", "category"]).columns
+    # cols_enc = set(X_tr.columns) - set(drop_cols)
+    # cols_enc = X_tr.select_dtypes(include=["object", "category"]).columns.array
+    # print(cols_enc)
+    # import pdb
+    # pdb.set_trace()
+
+    cols_enc = ["group"]
 
     for m in tqdm(param):
         if enc == "mestimate":
             encoder = MEstimateEncoder(m=m, cols=cols_enc)
         elif enc == "targetenc":
-            encoder = TargetEncoder(smoothing=m)
+            encoder = TargetEncoder(smoothing=m, cols=cols_enc)
         elif enc == "leaveoneout":
             encoder = LeaveOneOutEncoder(sigma=m, cols=cols_enc)
         elif enc == "ohe":
-            encoder = OneHotEncoder(handle_missing=-1)
+            encoder = OneHotEncoder(handle_missing=-1, cols=cols_enc)
         elif enc == "woe":
-            encoder = WOEEncoder(randomized=True, sigma=m)
+            encoder = WOEEncoder(randomized=True, sigma=m, cols=cols_enc)
         elif enc == "james":
-            encoder = JamesSteinEncoder(randomized=True, sigma=m)
+            encoder = JamesSteinEncoder(randomized=True, sigma=m, cols=cols_enc)
         elif enc == "catboost":
             encoder = CatBoostEncoder(a=1, sigma=m, cols=cols_enc)
         elif enc == "drop":
-            encoder = columnDropperTransformer(columns=drop_cols)
+            encoder = columnDropperTransformer(columns=cols_enc)
 
-        pipe = Pipeline([("encoder", encoder), ("model", model)])
+        pipe = Pipeline([("encoder", encoder),("model", model)])
         pipe.fit(X_tr, y_tr)
-
         metrica.append(
             metric_calculator(
                 modelo=pipe,
@@ -432,24 +455,29 @@ GROUP1 = "White"
 GROUP2 = "All"
 # Lenght of the linspace
 POINTS = 50
+# Power for viz
+POWER = 0.5
 # %%
 ## LR Experiment
-no_encoding1 = fair_encoder(
-    model=LogisticRegression(), enc="drop", drop_cols=COL, param=[0]
-)
+no_encoding1 = fair_encoder(model=LogisticRegression(), enc="drop", param=[0])
 one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
-PARAM = np.linspace(0, 1, POINTS)
+
+PARAM1 = np.concatenate(
+    (np.linspace(0, 1, 30), np.linspace(1, 2.5, POINTS - 30) ** 2), axis=0
+)/6
 gaus1 = fair_encoder(
     model=LogisticRegression(),
     enc="catboost",
-    param=PARAM,
+    param=PARAM1,
 )
-PARAM = np.linspace(0, 100_000, POINTS)
+PARAM2 = np.concatenate(
+    (np.linspace(0, 1_000, 30), np.linspace(30, 1_000, POINTS - 30) ** 2), axis=0
+)
 smooth1 = fair_encoder(
     model=LogisticRegression(),
     enc="mestimate",
-    param=PARAM,
+    param=PARAM2,
 )
 # %%
 # Visualize results
@@ -464,25 +492,25 @@ axs[0].scatter(
     gaus1["auc_tot"].values,
     gaus1["eof"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[0].scatter(
     gaus1["auc_tot"].values,
     gaus1["dp"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[0].scatter(
     gaus1["auc_tot"].values,
     gaus1["aao"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 ### ONE-HOT
 axs[0].scatter(
@@ -551,25 +579,25 @@ axs[1].scatter(
     smooth1["auc_tot"].values,
     smooth1["eof"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[1].scatter(
     smooth1["auc_tot"].values,
     smooth1["dp"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[1].scatter(
     smooth1["auc_tot"].values,
     smooth1["aao"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 
 ### ONE-HOT
@@ -622,7 +650,7 @@ axs[1].scatter(
     s=100,
     label="No Encoding AAO",
 )
-fig.savefig("images/encTheoryFolks.pdf")
+fig.savefig("images/encTheoryFolks.pdf", bbox_inches="tight")
 fig.show()
 # %%
 ### Figure 2 #####
@@ -636,7 +664,11 @@ fig.suptitle("Gaussian regularization target encoding")
 aux = gaus1.drop(columns=["dp", "aao", "eof"])  # .rolling(5).mean().dropna()
 
 for col in aux.columns:
-    axs[0].plot(aux[col], label=col)
+    # Remove this two plots
+    if col != "auc_tot":
+        if col != "auc_mic":
+            if col != "auc_micro":
+                axs[0].plot(aux[col], label=col)
     # plt.fill_between(aux.index,(aux[col] - stand[col]),(aux[col] + stand[col]),# color="b",alpha=0.1,)
 axs[0].legend()
 axs[0].set_title("Model performance")
@@ -653,7 +685,7 @@ axs[1].legend()
 axs[1].set_title("Fairness Metric")
 axs[1].set_ylabel("Fairness Metrics")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig("images/compassHyperGaussianfolks.pdf", bbox_inches="tight")
+plt.savefig("images/folksHyperGaussian.pdf", bbox_inches="tight")
 plt.show()
 ### Figure 3 #####
 ##################
@@ -662,9 +694,12 @@ fig, axs = plt.subplots(1, 2, sharex=True)
 fig.suptitle("Smoothing regularization target encoding")
 aux = smooth1.drop(columns=["dp", "aao", "eof"])  # .rolling(5).mean().dropna()
 
-
 for col in aux.columns:
-    axs[0].plot(aux[col], label=col)
+    # Remove this two plots
+    if col != "auc_tot":
+        if col != "auc_mic":
+            if col != "auc_micro":
+                axs[0].plot(aux[col], label=col)
     # plt.fill_between(aux.index,(aux[col] - stand[col]),(aux[col] + stand[col]),# color="b",alpha=0.1,)
 axs[0].legend()
 axs[0].set_title("Model performance")
@@ -680,10 +715,10 @@ axs[1].legend()
 axs[1].set_title("Fairness Metrics")
 axs[1].set_ylabel("")
 axs[1].set_xlabel("Regularization parameter")
-plt.savefig("images/compassHyperSmoothingfolks.pdf", bbox_inches="tight")
+plt.savefig("images/folksHyperSmoothing.pdf", bbox_inches="tight")
 plt.show()
-
-
+# %%
+## Heavy computation
 # %%
 ### Figure 4 #####
 ##################
@@ -701,32 +736,32 @@ plt.show()
 ## DT
 one_hot2 = fair_encoder(model=MLPClassifier(), enc="ohe", param=[0])
 no_encoding2 = fair_encoder(model=MLPClassifier(), enc="drop", drop_cols=COL, param=[0])
-PARAM = np.linspace(0, 1, POINTS)
+
 gaus2 = fair_encoder(
     model=MLPClassifier(),
     enc="catboost",
-    param=PARAM,
+    param=PARAM1,
 )
-PARAM = np.linspace(0, 100_000, POINTS)
+
 smooth2 = fair_encoder(
     model=MLPClassifier(),
     enc="mestimate",
-    param=PARAM,
+    param=PARAM2,
 )
 ## GBDT
 one_hot3 = fair_encoder(model=XGBClassifier(), enc="ohe", param=[0])
 no_encoding3 = fair_encoder(model=XGBClassifier(), enc="drop", drop_cols=COL, param=[0])
-PARAM = np.linspace(0, 1, POINTS)
+
 gaus3 = fair_encoder(
     model=XGBClassifier(),
     enc="catboost",
-    param=PARAM,
+    param=PARAM1,
 )
-PARAM = np.linspace(0, 100_000, POINTS)
+
 smooth3 = fair_encoder(
     model=XGBClassifier(),
     enc="mestimate",
-    param=PARAM,
+    param=PARAM2,
 )
 # %%
 ## VIZ 3 MODELS
@@ -742,25 +777,25 @@ axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["eof"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["dp"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["aao"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 ### ONE-HOT
 axs[0, 0].scatter(
@@ -829,25 +864,25 @@ axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["eof"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["dp"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["aao"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 
 ### ONE-HOT
@@ -902,31 +937,31 @@ axs[0, 1].scatter(
 )
 ######### DT #########
 #######################
-axs[1, 0].set_title("Decision Tree + Gaussian Noise")
+axs[1, 0].set_title("Neural Net + Gaussian Noise")
 ### Fairness metrics plotting
 axs[1, 0].scatter(
     gaus2["auc_tot"].values,
     gaus2["eof"].values,
     s=100,
-    c=gaus2.index.values,
+    c=gaus2.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[1, 0].scatter(
     gaus2["auc_tot"].values,
     gaus2["dp"].values,
     s=100,
-    c=gaus2.index.values,
+    c=gaus2.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[1, 0].scatter(
     gaus2["auc_tot"].values,
     gaus2["aao"].values,
     s=100,
-    c=gaus2.index.values,
+    c=gaus2.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 ### ONE-HOT
 axs[1, 0].scatter(
@@ -981,39 +1016,38 @@ axs[1, 0].scatter(
 )
 
 ### Figure labels
-axs[1, 0].legend()
 axs[1, 0].set(xlabel="AUC")
 axs[1, 1].set(xlabel="AUC")
 axs[1, 0].set(ylabel="Fairness metrics")
-axs[1, 1].set_title("Decision Tree + Smoothing Regularizer")
-leg = axs[1, 0].get_legend()
-leg.legendHandles[0].set_color("red")
-leg.legendHandles[1].set_color("blue")
-leg.legendHandles[2].set_color("green")
+axs[1, 1].set_title("Neural Net + Smoothing Regularizer")
+# leg = axs[1, 0].get_legend()
+# leg.legendHandles[0].set_color("red")
+# leg.legendHandles[1].set_color("blue")
+# leg.legendHandles[2].set_color("green")
 
 axs[1, 1].scatter(
     smooth2["auc_tot"].values,
     smooth2["eof"].values,
     s=100,
-    c=smooth2.index.values,
+    c=smooth2.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[1, 1].scatter(
     smooth2["auc_tot"].values,
     smooth2["dp"].values,
     s=100,
-    c=smooth2.index.values,
+    c=smooth2.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[1, 1].scatter(
     smooth2["auc_tot"].values,
     smooth2["aao"].values,
     s=100,
-    c=smooth2.index.values,
+    c=smooth2.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 
 ### ONE-HOT
@@ -1075,25 +1109,25 @@ axs[2, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["eof"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[2, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["dp"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[2, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["aao"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 ### ONE-HOT
 axs[2, 0].scatter(
@@ -1148,39 +1182,38 @@ axs[2, 0].scatter(
 )
 
 ### Figure labels
-axs[2, 0].legend()
 axs[2, 0].set(xlabel="AUC")
 axs[2, 1].set(xlabel="AUC")
 axs[2, 0].set(ylabel="Fairness metrics")
 axs[2, 1].set_title("Gradient Boosting + Smoothing Regularizer")
-leg = axs[2, 0].get_legend()
-leg.legendHandles[0].set_color("red")
-leg.legendHandles[1].set_color("blue")
-leg.legendHandles[2].set_color("green")
+# leg = axs[2, 0].get_legend()
+# leg.legendHandles[0].set_color("red")
+# leg.legendHandles[1].set_color("blue")
+# leg.legendHandles[2].set_color("green")
 
 axs[2, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["eof"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[2, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["dp"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[2, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["aao"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 
 ### ONE-HOT
@@ -1251,25 +1284,25 @@ axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["eof"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["dp"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[0, 0].scatter(
     gaus1["auc_tot"].values,
     gaus1["aao"].values,
     s=100,
-    c=gaus1.index.values,
+    c=gaus1.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 ### ONE-HOT
 axs[0, 0].scatter(
@@ -1338,25 +1371,25 @@ axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["eof"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["dp"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[0, 1].scatter(
     smooth1["auc_tot"].values,
     smooth1["aao"].values,
     s=100,
-    c=smooth1.index.values,
+    c=smooth1.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 
 ### ONE-HOT
@@ -1417,25 +1450,25 @@ axs[1, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["eof"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[1, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["dp"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[1, 0].scatter(
     gaus3["auc_tot"].values,
     gaus3["aao"].values,
     s=100,
-    c=gaus3.index.values,
+    c=gaus3.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 ### ONE-HOT
 axs[1, 0].scatter(
@@ -1504,25 +1537,25 @@ axs[1, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["eof"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Reds",
-    label="EOF Regularization Parameter (Darker=High)",
+    label="Target Encoder EOF (Darker=Higher Reg)",
 )
 axs[1, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["dp"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Blues",
-    label="Demographic Parity",
+    label="Target Encoder Demographic Parity",
 )
 axs[1, 1].scatter(
     smooth3["auc_tot"].values,
     smooth3["aao"].values,
     s=100,
-    c=smooth3.index.values,
+    c=smooth3.index.values**POWER,
     cmap="Greens",
-    label="Average Absolute Odds",
+    label="Target Encoder AAO",
 )
 
 ### ONE-HOT
@@ -1576,7 +1609,8 @@ axs[1, 1].scatter(
     label="No Encoding AAO",
 )
 
-fig.savefig("images/enc2modelsfolks.pdf", bbox_inches="tight")
+fig.savefig("images/enc2modelsFolks.pdf", bbox_inches="tight")
+
 fig.show()
 
 # %%
