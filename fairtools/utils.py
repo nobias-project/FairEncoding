@@ -96,7 +96,6 @@ def metric_calculator(
 
 
 def plot_rolling(data, roll_mean: int = 5, roll_std: int = 20):
-
     aux = data.rolling(roll_mean).mean().dropna()
     stand = data.rolling(roll_std).quantile(0.05, interpolation="lower").dropna()
     plt.figure()

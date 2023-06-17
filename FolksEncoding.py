@@ -20,7 +20,7 @@ rcParams["xtick.labelsize"] = 12
 rcParams["ytick.labelsize"] = 12
 rcParams["figure.figsize"] = 16, 8
 # Increase font size
-sns.set(font_scale=1.5)
+
 rcParams["font.size"] = 22
 
 import warnings
@@ -145,6 +145,7 @@ plt.show()
 X = ca_features.drop(columns=["label"])
 y = ca_features[["label"]]
 X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
+
 
 # %%
 # Auxiliary functions
@@ -311,7 +312,8 @@ def metric_calculator(
         np.absolute(aao_sum).sum(),
     )
 
-# %%
+
+# %%
 explain()
 # %%
 # Train model
@@ -345,9 +347,10 @@ res["dp"] = res["fairness"].apply(lambda x: x[1])
 res["aao"] = res["fairness"].apply(lambda x: x[2])
 res = res.drop(columns="fairness")
 res
+
+
 # %%
 def plot_rolling(data, roll_mean: int = 5, roll_std: int = 20):
-
     aux = data.rolling(roll_mean).mean().dropna()
     stand = data.rolling(roll_std).quantile(0.05, interpolation="lower").dropna()
     plt.figure()
@@ -401,7 +404,7 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
         elif enc == "leaveoneout":
             encoder = LeaveOneOutEncoder(sigma=m, cols=cols_enc)
         elif enc == "ohe":
-            encoder = OneHotEncoder(handle_missing=-1, cols=cols_enc)
+            encoder = OneHotEncoder(cols=cols_enc)
         elif enc == "woe":
             encoder = WOEEncoder(randomized=True, sigma=m, cols=cols_enc)
         elif enc == "james":
@@ -411,7 +414,7 @@ def fair_encoder(model, param: list, enc: str = "mestimate", drop_cols: list = [
         elif enc == "drop":
             encoder = columnDropperTransformer(columns=cols_enc)
 
-        pipe = Pipeline([("encoder", encoder),("model", model)])
+        pipe = Pipeline([("encoder", encoder), ("model", model)])
         pipe.fit(X_tr, y_tr)
         metrica.append(
             metric_calculator(
@@ -463,9 +466,12 @@ no_encoding1 = fair_encoder(model=LogisticRegression(), enc="drop", param=[0])
 one_hot1 = fair_encoder(model=LogisticRegression(), enc="ohe", param=[0])
 
 
-PARAM1 = np.concatenate(
-    (np.linspace(0, 1, 30), np.linspace(1, 2.5, POINTS - 30) ** 2), axis=0
-)/6
+PARAM1 = (
+    np.concatenate(
+        (np.linspace(0, 1, 30), np.linspace(1, 2.5, POINTS - 30) ** 2), axis=0
+    )
+    / 6
+)
 gaus1 = fair_encoder(
     model=LogisticRegression(),
     enc="catboost",
@@ -671,9 +677,9 @@ for col in aux.columns:
                 axs[0].plot(aux[col], label=col)
     # plt.fill_between(aux.index,(aux[col] - stand[col]),(aux[col] + stand[col]),# color="b",alpha=0.1,)
 axs[0].legend()
-axs[0].set_title("Model performance")
-axs[0].set_ylabel("AUC")
-axs[0].set_xlabel("Regularization parameter")
+axs[0].set_title("Model performance", fontsize=20)
+axs[0].set_ylabel("AUC", fontsize=20)
+axs[0].set_xlabel("Regularization parameter", fontsize=20)
 
 aux = gaus1[["eof", "dp", "aao"]]  # .rolling(5).mean().dropna()
 
@@ -681,10 +687,10 @@ axs[1].plot(aux["eof"], label="EOF " + GROUP1 + " vs " + GROUP2, color="r")
 axs[1].plot(aux["dp"], label="DP " + GROUP1 + " vs " + GROUP2, color="b")
 axs[1].plot(aux["aao"], label="AAO" + GROUP1 + " vs " + GROUP2, color="g")
 
-axs[1].legend()
-axs[1].set_title("Fairness Metric")
-axs[1].set_ylabel("Fairness Metrics")
-axs[1].set_xlabel("Regularization parameter")
+axs[1].legend(fontsize=16)
+axs[1].set_title("Fairness Metric", fontsize=20)
+axs[1].set_ylabel("Fairness Metrics", fontsize=20)
+axs[1].set_xlabel("Regularization parameter", fontsize=20)
 plt.savefig("images/folksHyperGaussian.pdf", bbox_inches="tight")
 plt.show()
 ### Figure 3 #####
@@ -701,20 +707,20 @@ for col in aux.columns:
             if col != "auc_micro":
                 axs[0].plot(aux[col], label=col)
     # plt.fill_between(aux.index,(aux[col] - stand[col]),(aux[col] + stand[col]),# color="b",alpha=0.1,)
-axs[0].legend()
-axs[0].set_title("Model performance")
-axs[0].set_ylabel("AUC")
-axs[0].set_xlabel("Regularization parameter")
+axs[0].legend(fontsize=16)
+axs[0].set_title("Model performance", fontsize=20)
+axs[0].set_ylabel("AUC", fontsize=20)
+axs[0].set_xlabel("Regularization parameter", fontsize=20)
 
 aux = smooth1[["dp", "eof", "aao"]]  # .rolling(5).mean().dropna()
 axs[1].plot(aux["eof"], label="EOF " + GROUP1 + " vs " + GROUP2, color="r")
 axs[1].plot(aux["dp"], label="DP " + GROUP1 + " vs " + GROUP2, color="b")
 axs[1].plot(aux["aao"], label="AAO" + GROUP1 + " vs " + GROUP2, color="g")
 
-axs[1].legend()
-axs[1].set_title("Fairness Metrics")
+axs[1].legend(fontsize=16)
+axs[1].set_title("Fairness Metrics", fontsize=20)
 axs[1].set_ylabel("")
-axs[1].set_xlabel("Regularization parameter")
+axs[1].set_xlabel("Regularization parameter", fontsize=20)
 plt.savefig("images/folksHyperSmoothing.pdf", bbox_inches="tight")
 plt.show()
 # %%
@@ -1358,10 +1364,10 @@ axs[0, 0].scatter(
 
 ### Figure labels
 axs[0, 0].legend()
-axs[0, 0].set(xlabel="AUC")
-axs[0, 1].set(xlabel="AUC")
-axs[0, 0].set(ylabel="Fairness metrics")
-axs[0, 1].set_title("Logistic Regression + Smoothing Regularizer")
+axs[0, 0].set(xlabel="AUC", fontsize=20)
+axs[0, 1].set(xlabel="AUC", fontsize=20)
+axs[0, 0].set(ylabel="Fairness metrics", fontsize=20)
+axs[0, 1].set_title("Logistic Regression + Smoothing Regularizer", fontsize=20)
 leg = axs[0, 0].get_legend()
 leg.legendHandles[0].set_color("red")
 leg.legendHandles[1].set_color("blue")

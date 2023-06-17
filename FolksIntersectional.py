@@ -151,6 +151,8 @@ plt.pie(
     explode=explode,
 )
 plt.show()
+
+
 # %%
 # Auxiliary functions
 def fit_predict(modelo, enc, data, target, test):

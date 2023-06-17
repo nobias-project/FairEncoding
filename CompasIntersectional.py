@@ -14,12 +14,13 @@ from matplotlib import rcParams
 import shap
 
 plt.rcParams["figure.figsize"] = [10, 5]
-plt.rcParams.update({"font.size": 18})
+plt.rcParams.update({"font.size": 22})
 plt.style.use("seaborn-whitegrid")
 rcParams["axes.labelsize"] = 14
 rcParams["xtick.labelsize"] = 12
 rcParams["ytick.labelsize"] = 12
 rcParams["figure.figsize"] = 16, 8
+
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -124,6 +125,8 @@ df = OrdinalEncoder(
 X = df.drop(columns=["Ethnic", "MaritalStatus", "Score"])
 y = df[["Score"]]
 X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=42)
+
+
 # %%
 # Remove groups that have small statistical mass
 def func(pct, allvals):
@@ -160,6 +163,8 @@ plt.pie(
     explode=explode,
 )
 plt.show()
+
+
 # %%
 # Auxiliary functions
 def fit_predict(modelo, enc, data, target, test):
@@ -475,12 +480,12 @@ rects3 = ax.bar(
 
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
-ax.set_ylabel("Equal Opportunity Fairness Metric")
-ax.set_title("Max Fairness violation when using intersectional groups")
-ax.set_xticks(x, labels)
+ax.set_ylabel("Equal Opportunity Fairness Metric", fontsize=20)
+ax.set_title("Max Fairness violation when using intersectional groups", fontsize=20)
+ax.set_xticks(x, labels, fontsize=20)
 ax.legend()
 
-ax.bar_label(rects1, padding=3)
+ax.bar_label(rects1, padding=3, fontsize=20)
 ax.bar_label(rects2, padding=3)
 ax.bar_label(rects3, padding=3)
 
